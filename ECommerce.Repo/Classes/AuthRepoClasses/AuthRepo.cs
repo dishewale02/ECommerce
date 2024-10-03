@@ -20,7 +20,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
         public async Task<Response<User>> FindByEmailAsync(string email)
         {
             //check if input email id is null.
-            if(email == null)
+            if(string.IsNullOrWhiteSpace(email))
             {
                 return new Response<User>("email id is blank.");
             }
