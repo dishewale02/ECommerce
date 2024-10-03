@@ -1,8 +1,36 @@
+using ECommerce.Data;
+using ECommerce.Repo.Classes.AuthRepoClasses;
+using ECommerce.Repo.Interfaces.AuthRepoInterface;
+using ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass;
+using ECommerce.Services.RepoServiceInterfaces.AuthRepoServiceInterface;
+using Microsoft.EntityFrameworkCore;
+using ShoppingCart.Services.HasherService;
+using ShoppingCart.Services.MapperService;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
+//Add dbContext.
+var connectionString = builder.Configuration.GetConnectionString("DefaultString");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+options.UseSqlServer(connectionString));
+
+//Add other Dependency Injection Services.
+builder.Services.AddScoped<IAuthRepoService, AuthRepoService>();
+builder.Services.AddScoped<IAuthRepo, AuthRepo>();
+builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+
+//configure auto mapper.
+var config = new AutoMapper.MapperConfiguration(options =>
+{
+    options.AddProfile(new AutoMapperService());
+});
+var mapper = config.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
