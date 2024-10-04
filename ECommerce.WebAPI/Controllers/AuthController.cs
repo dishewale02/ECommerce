@@ -1,5 +1,4 @@
-﻿using ECommerce.Models.DTOsModels.AuthDTOsModels;
-using ECommerce.Models.InputModels.AuthInputModels;
+﻿using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Services.RepoServiceInterfaces.AuthRepoServiceInterface;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,7 @@ namespace ECommerce.WebAPI.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterInputModel registerModel)
+        public async Task<IActionResult> Register([FromBody] RegisterInputDTO registerModel)
         {
             //check if input model is valid or not.
             if(!ModelState.IsValid)
@@ -31,7 +30,7 @@ namespace ECommerce.WebAPI.Controllers
                 try
                 {
                     //send Register Input Model to service layer.
-                    Response<RegisterInputModel> registerServiceResponse = await _authRepoService.RegisterUserAsync(registerModel);
+                    Response<RegisterInputDTO> registerServiceResponse = await _authRepoService.RegisterUserAsync(registerModel);
 
                     //check if response has error.
                     if(registerServiceResponse.Value is null)

@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerce.Data;
 using ECommerce.Repo.Classes.AuthRepoClasses;
 using ECommerce.Repo.Interfaces.AuthRepoInterface;
@@ -23,13 +24,7 @@ builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 
 //configure auto mapper.
-var config = new AutoMapper.MapperConfiguration(options =>
-{
-    options.AddProfile(new AutoMapperService());
-});
-var mapper = config.CreateMapper();
-builder.Services.AddSingleton(mapper);
-
+builder.Services.AddAutoMapper(typeof(AutoMapperService));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

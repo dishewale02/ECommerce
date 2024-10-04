@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Models.DataModels.AuthDataModels;
-using ECommerce.Models.DTOsModels.AuthDTOsModels;
-using ECommerce.Models.InputModels.AuthInputModels;
+using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 
 namespace ShoppingCart.Services.MapperService
 {
@@ -9,7 +8,8 @@ namespace ShoppingCart.Services.MapperService
     {
         public AutoMapperService()
         {
-            CreateMap<RegisterInputModel, User>().ReverseMap();
+            CreateMap<RegisterInputDTO, User>().ReverseMap();
+
         }
     }
 }

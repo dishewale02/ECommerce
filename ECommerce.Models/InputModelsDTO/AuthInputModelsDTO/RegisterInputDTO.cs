@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Models.InputModels.AuthInputModels
+namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
 {
-    public class RegisterInputModel
+    public class RegisterInputDTO
     {
         [Required]
         public string? FirstName { get; set; }

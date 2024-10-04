@@ -6,7 +6,7 @@ namespace ECommerce.Models.ResponseModel
         public bool IsSuccessfull { get; set; }
         public string? ErrorMessage { get; set; }
         public IEnumerable<string>? ErrorsMessages { get; set; }
-        public T? Value { get; set; }
+        public T Value { get; set; }
 
         public Response()
         {
@@ -34,12 +34,32 @@ namespace ECommerce.Models.ResponseModel
             IsSuccessfull = false;
         }
 
-        public Response<string> AddStringValue(string value)
+        public Response<T> AddStringValue(T value)
         {
-            return new Response<string>()
+            return new Response<T>()
             {
                 Value = value,
                 IsSuccessfull = true
+            };
+        }
+
+        public static Response<T> Success(T entity)
+        {
+            return new Response<T>()
+            {
+                Value = entity,
+                IsSuccessfull = true,
+                ErrorMessage = null
+            };
+        }
+
+        public static Response<T> Failure(string? errorMessage)
+        {
+            return new Response<T>()
+            {
+                ErrorMessage = errorMessage,
+                IsSuccessfull = false,
+                Value = null
             };
         }
     }

@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Models.DataModels.AuthDataModels;
-using ECommerce.Models.DTOsModels.AuthDTOsModels;
-using ECommerce.Models.InputModels.AuthInputModels;
+using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Interfaces.AuthRepoInterface;
 using ECommerce.Services.RepoServiceInterfaces.AuthRepoServiceInterface;
@@ -27,45 +26,45 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
             throw new NotImplementedException();
         }
 
-        public async Task<Response<RegisterInputModel>> RegisterUserAsync(RegisterInputModel registerInputModel)
+        public async Task<Response<RegisterInputDTO>> RegisterUserAsync(RegisterInputDTO registerInputModel)
         {
             //check if input model is empty.
             if(registerInputModel == null)
             {
-                return new Response<RegisterInputModel>("input can not empty");
+                return new Response<RegisterInputDTO>("input can not empty");
             }
             else
             {
                 try
                 {
                     //check if password is null.
-                    if (registerInputModel.Password is null)
+                    if (string.IsNullOrWhiteSpace(registerInputModel.Password))
                     {
-                        return new Response<RegisterInputModel>("password can not be null.");
+                        return Response<RegisterInputDTO>.Failure("password can not be null.");
                     }
 
                     //check if password and confirm password is matching.
                     if (registerInputModel.Password != registerInputModel.ConfirmPassword)
                     {
-                        return new Response<RegisterInputModel>("password and confirm password not matching.");
+                        return Response<RegisterInputDTO>.Failure("password and confirm password not matching.");
                     }
 
                     //check if User already available by UserName.
                     Response<User> foundByUserNameResponse = await FindByUserNameAsync(registerInputModel.UserName);
 
                     //check response.
-                    if(foundByUserNameResponse.Value is not null)
+                    if(foundByUserNameResponse.IsSuccessfull)
                     {
-                        return new Response<RegisterInputModel>("User Name is already Available.");
+                        return Response<RegisterInputDTO>.Failure("User Name is already Available.");
                     }
 
                     //check if user already available by Email.
                     Response<User> findByEmailResponse = await FindByEmailAsync(registerInputModel.Email);
 
                     //check response.
-                    if(!findByEmailResponse.IsSuccessfull)
+                    if(findByEmailResponse.IsSuccessfull)
                     {
-                        return new Response<RegisterInputModel>("Email id is already available.");
+                        return Response<RegisterInputDTO>.Failure("Email id is already available.");
                     }
 
                     //map registerInputModel to registerModelDTO
@@ -77,30 +76,30 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                     //check password hasher response.
                     if(!passwordHashResponse.IsSuccessfull)
                     {
-                        return new Response<RegisterInputModel>(passwordHashResponse.ErrorMessage);
+                        return Response<RegisterInputDTO>.Failure(passwordHashResponse.ErrorMessage);
                     }
 
                     //fill other informations.
                     convertToUser.CreatedOn = DateTime.Now;
-                    convertToUser.Password = passwordHashResponse.Value;
+                    convertToUser.PasswordHash = passwordHashResponse.Value;
 
                     //send model to Repository layer.
-                    Response<User> registerUserResponse = await _authRepo.RegisterAsync(convertToUser);
+                    Response<User> registerUserResponse = await _authRepo.CreateUserAsync(convertToUser);
 
                     //check register response.
                     if(!registerUserResponse.IsSuccessfull)
                     {
-                        return new Response<RegisterInputModel>(registerUserResponse.ErrorMessage);
+                        return Response<RegisterInputDTO>.Failure(registerUserResponse.ErrorMessage);
                     }
 
                     //map register model to Register Input Model.
-                    RegisterInputModel convertedToRegisterInputModel = _mapper.Map<RegisterInputModel>(registerUserResponse.Value);
+                    RegisterInputDTO convertedToRegisterInputModel = _mapper.Map<RegisterInputDTO>(registerUserResponse.Value);
 
-                    return new Response<RegisterInputModel>(convertedToRegisterInputModel);
+                    return Response<RegisterInputDTO>.Success(convertedToRegisterInputModel);
                 }
                 catch (Exception ex)
                 {
-                    return new Response<RegisterInputModel>(ex.Message);
+                    return Response<RegisterInputDTO>.Failure(ex.Message);
                 }
             }
         }
@@ -108,23 +107,23 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
         private async Task<Response<User>> FindByUserNameAsync(string? userName)
         {
             //check if input is null.
-            if (userName == null)
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                return new Response<User>("input email string is null.");
+                return Response<User>.Failure("input email string is null.");
             }
             else
             {
                 //get find user by UserName.
-                Response<User> foundUserByUserNameResponse = await _authRepo.FindByUserNameAsync(userName);
+                Response<User>? foundUserByUserNameResponse = await _authRepo.FindByUserNameAsync(userName);
 
                 //check response.
-                if (foundUserByUserNameResponse.IsSuccessfull)
+                if (!foundUserByUserNameResponse.IsSuccessfull)
                 {
-                    return new Response<User>(foundUserByUserNameResponse.ErrorMessage);
+                    return Response<User>.Failure(foundUserByUserNameResponse.ErrorMessage);
                 }
                 else
                 {
-                    return new Response<User>(foundUserByUserNameResponse.Value);
+                    return Response<User>.Success(foundUserByUserNameResponse.Value);
                 }
             }
         }
@@ -132,9 +131,9 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
         private async Task<Response<User>> FindByEmailAsync(string? email)
         {
             //check if input is null.
-            if (email == null)
+            if (string.IsNullOrWhiteSpace(email))
             {
-                return new Response<User>("input email string is null.");
+                return Response<User>.Failure("input email string is null.");
             }
             else
             {
@@ -142,13 +141,13 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                 Response<User> foundUserByEmailResponse = await _authRepo.FindByEmailAsync(email);
 
                 //check response.
-                if (foundUserByEmailResponse.Value is null)
+                if (!foundUserByEmailResponse.IsSuccessfull)
                 {
-                    return new Response<User>(foundUserByEmailResponse.ErrorMessage);
+                    return Response<User>.Failure(foundUserByEmailResponse.ErrorMessage);
                 }
                 else
                 {
-                    return new Response<User>(foundUserByEmailResponse.Value);
+                    return Response<User>.Success(foundUserByEmailResponse.Value);
                 }
             }
         }

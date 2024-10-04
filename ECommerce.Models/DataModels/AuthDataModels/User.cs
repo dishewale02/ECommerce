@@ -12,7 +12,7 @@ namespace ECommerce.Models.DataModels.AuthDataModels
         [Required]
         public string? UserName { get; set; }
         [Required]
-        public string? Password { get; set; }
+        public string? PasswordHash { get; set; }
         [Required]
         public string? Email { get; set; }
         public string? Phone { get; set; }

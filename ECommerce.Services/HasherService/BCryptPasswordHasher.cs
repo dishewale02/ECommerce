@@ -1,5 +1,6 @@
 ﻿
 
+using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.ResponseModel;
 
 namespace ShoppingCart.Services.HasherService
@@ -8,24 +9,24 @@ namespace ShoppingCart.Services.HasherService
     {
         public async Task<Response<string>> GenerateHashAsync(string password)
         {
-            if (password == null)
+            if (string.IsNullOrWhiteSpace(password))
             {
-                return new Response<string>("password field is empty.");
+                return Response<string>.Failure("password field is empty.");
             }
             string passwordHashed = BCrypt.Net.BCrypt.HashPassword(password);
 
             if (passwordHashed == null)
             {
-                return new Response<string>("internal error");
+                return Response<string>.Failure("internal error");
             }
-            return new Response<string>().AddStringValue(passwordHashed);
+            return Response<string>.Success(passwordHashed);
         }
 
-        public Task<bool> VerifyPasswordAsync(string password, string passwordHash)
+        public Response<User> VerifyPasswordAsync(string password, string passwordHash)
         {
-            if (password == null)
+            if (string.IsNullOrWhiteSpace(password))
             {
-                return Task.FromResult(false);
+                return Response<User>.Failure("password can not blank.");
             }
 
             //password validation through BCrypt tool;
@@ -33,9 +34,9 @@ namespace ShoppingCart.Services.HasherService
 
             if (isPasswordValid)
             {
-                return Task.FromResult(true);
+                return Response<User>.Success(new User());
             }
-            return Task.FromResult(false);
+            return Response<User>.Failure("password is not valid.");
         }
     }
 }

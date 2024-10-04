@@ -19,57 +19,70 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
 
         public async Task<Response<User>> FindByEmailAsync(string email)
         {
-            //check if input email id is null.
-            if(string.IsNullOrWhiteSpace(email))
+            try
             {
-                return new Response<User>("email id is blank.");
+                //check if input email id is null.
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    return Response<User>.Failure("email id is blank.");
+                }
+
+                //find if database is having email id or not.
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+                //check if found user is null.
+                if (foundUserInDatabase is null)
+                {
+                    return Response<User>.Failure("User not Found");
+                }
+
+                return Response<User>.Success(foundUserInDatabase);
             }
-
-            //find if database is having email id or not.
-            User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
-
-            //check if found user is null.
-            if(foundUserInDatabase is null)
+            catch (Exception ex)
             {
-                return new Response<User>("User is not already available.");
+                return Response<User>.Failure(ex.Message);
             }
-
-            return new Response<User>(foundUserInDatabase);
         }
 
         public async Task<Response<User>> FindByUserNameAsync(string userName)
         {
-            //check if input userName is null.
-            if (userName == null)
+            try
             {
-                return new Response<User>("UserName is blank.");
+                //check if input userName is null.
+                if (string.IsNullOrWhiteSpace(userName))
+                {
+                    return Response<User>.Failure("UserName is blank.");
+                }
+
+                //find if database is having email id or not.
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
+
+                //check if found user is null.
+                if (foundUserInDatabase is null)
+                {
+                    return Response<User>.Failure("User not Found");
+                }
+
+                return Response<User>.Success(foundUserInDatabase);
             }
-
-            //find if database is having email id or not.
-            User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
-
-            //check if found user is null.
-            if (foundUserInDatabase is null)
+            catch (Exception ex)
             {
-                return new Response<User>("User is not already available.");
+                return Response<User>.Failure(ex.Message);
             }
-
-            return new Response<User>(foundUserInDatabase);
         }
 
-        public async Task<Response<User>> RegisterAsync(User userModel)
+        public async Task<Response<User>> CreateUserAsync(User userModel)
         {
             //check if user is null or not.
             if (userModel is null)
             {
-                return new Response<User>("input user is blank");
+                return Response<User>.Failure("input user is blank");
             }
 
             try
             {
                 //save the user in database.
                 EntityEntry<User> addedUserInDatabaseResponse = await _dbContext.Users.AddAsync(userModel);
-                await SaveAsync();
 
                 //extract saved User form response.
                 User addedUserInDatabase = addedUserInDatabaseResponse.Entity;
@@ -77,14 +90,16 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 //check if user saved in database or not.
                 if (addedUserInDatabase is null)
                 {
-                    return new Response<User>("error saving user in database.");
+                    return Response<User>.Failure("error saving user in database.");
                 }
 
-                return new Response<User>(addedUserInDatabase);
+                await SaveAsync();
+
+                return Response<User>.Success(addedUserInDatabase);
             }
             catch (Exception ex)
             {
-                return new Response<User>(ex.Message);
+                return Response<User>.Failure(ex.Message);
             }
         }
 

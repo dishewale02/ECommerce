@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Models.InputModels.AuthInputModels
+﻿namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
 {
     public class LoginInputModel
     {
