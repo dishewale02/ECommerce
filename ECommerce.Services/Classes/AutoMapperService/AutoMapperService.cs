@@ -2,9 +2,9 @@
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 
-namespace ShoppingCart.Services.MapperService
+namespace ECommerce.Services.Classes.AutoMapperService
 {
-    public class AutoMapperService: Profile
+    public class AutoMapperService : Profile
     {
         public AutoMapperService()
         {

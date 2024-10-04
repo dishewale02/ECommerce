@@ -12,5 +12,6 @@ namespace ECommerce.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public virtual DbSet<JwtToken> JwtTokens { get; set; }
     }
 }

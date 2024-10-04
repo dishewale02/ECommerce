@@ -2,8 +2,9 @@
 
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.ResponseModel;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface;
 
-namespace ShoppingCart.Services.HasherService
+namespace ECommerce.Services.Classes.RepoServiceClasses.PasswordHasherServiceClass
 {
     public class BCryptPasswordHasher : IPasswordHasher
     {
@@ -22,7 +23,7 @@ namespace ShoppingCart.Services.HasherService
             return Response<string>.Success(passwordHashed);
         }
 
-        public Response<bool> VerifyPasswordAsync(string password, string passwordHash)
+        public async Task<Response<bool>> VerifyPasswordAsync(string password, string passwordHash)
         {
             if (string.IsNullOrWhiteSpace(password))
             {

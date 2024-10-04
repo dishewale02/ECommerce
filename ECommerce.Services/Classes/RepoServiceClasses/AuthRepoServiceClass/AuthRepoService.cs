@@ -1,35 +1,114 @@
 ﻿using AutoMapper;
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
+using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Interfaces.AuthRepoInterface;
-using ECommerce.Services.RepoServiceInterfaces.AuthRepoServiceInterface;
-using ShoppingCart.Services.HasherService;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.JwtTokenGeneratorInterface;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface;
 
-namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
+namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 {
     public class AuthRepoService : IAuthRepoService
     {
         private readonly IMapper _mapper;
         private readonly IAuthRepo _authRepo;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IAuthenticator _authenticator;
 
-        public AuthRepoService(IMapper mapper, IAuthRepo authRepo, IPasswordHasher passwordHasher)
+        public AuthRepoService(IMapper mapper, IAuthRepo authRepo, IPasswordHasher passwordHasher, IAuthenticator authenticator)
         {
             _mapper = mapper;
             _authRepo = authRepo;
             _passwordHasher = passwordHasher;
+            _authenticator = authenticator;
         }
 
-        public Task<Response<LoginInpulDTO>> LoginUserAsync(LoginInpulDTO loginInputModel)
+        public async Task<Response<JwtTokenDTO>> LoginUserAsync(LoginInpulDTO loginInputModel)
         {
-            
+            try
+            {
+                //find if user is null or not.
+                if (loginInputModel is null || loginInputModel.Password is null || loginInputModel.UserName is null)
+                {
+                    return Response<JwtTokenDTO>.Failure("provided input is not valid.");
+                }
+
+                //validate username in database.
+                Response<User> UserAvailableCheckUsingUserName = await _authRepo.FindByUserNameAsync(loginInputModel.UserName);
+
+                //validate username in database by using email.
+                Response<User> UserAvailableCheckUsingEmail = await _authRepo.FindByEmailAsync(loginInputModel.UserName);
+
+                if (!UserAvailableCheckUsingEmail.IsSuccessfull && !UserAvailableCheckUsingUserName.IsSuccessfull)
+                {
+                    return Response<JwtTokenDTO>.Failure(UserAvailableCheckUsingEmail.ErrorMessage);
+                }
+
+                //convert password hash.
+                Response<string> passwordHashResponse = await _passwordHasher.GenerateHashAsync(loginInputModel.Password);
+
+                if (!passwordHashResponse.IsSuccessfull)
+                {
+                    return Response<JwtTokenDTO>.Failure(passwordHashResponse.ErrorMessage);
+                }
+
+                //create new instance.
+                Response<bool> verifyPasswordInDatabaseResponse = new Response<bool>();
+
+                //create Return object.
+                Response<JwtTokenDTO> tokenResult = new Response<JwtTokenDTO>();
+
+                //validate password.
+                if (UserAvailableCheckUsingUserName.IsSuccessfull)
+                {
+                    verifyPasswordInDatabaseResponse = await _passwordHasher.VerifyPasswordAsync(loginInputModel.Password, UserAvailableCheckUsingUserName.Value.PasswordHash);
+
+                    if(!verifyPasswordInDatabaseResponse.IsSuccessfull)
+                    {
+                        return Response<JwtTokenDTO>.Failure(verifyPasswordInDatabaseResponse.ErrorMessage);
+                    }
+
+                    //create and save token
+                    tokenResult = await CreateAndSaveTokenAsync(UserAvailableCheckUsingUserName.Value);
+
+                    if (!tokenResult.IsSuccessfull)
+                    {
+                        return Response<JwtTokenDTO>.Failure(tokenResult.ErrorMessage);
+                    }
+                }
+                else
+                {
+                    verifyPasswordInDatabaseResponse = await _passwordHasher.VerifyPasswordAsync(loginInputModel.Password, UserAvailableCheckUsingEmail.Value.PasswordHash);
+
+                    if (!verifyPasswordInDatabaseResponse.IsSuccessfull)
+                    {
+                        return Response<JwtTokenDTO>.Failure(verifyPasswordInDatabaseResponse.ErrorMessage);
+                    }
+
+                    //create and save token
+                    tokenResult = await CreateAndSaveTokenAsync(UserAvailableCheckUsingEmail.Value);
+
+                    if (!tokenResult.IsSuccessfull)
+                    {
+                        return Response<JwtTokenDTO>.Failure(tokenResult.ErrorMessage);
+                    }
+                }
+
+                return Response<JwtTokenDTO>.Success(tokenResult.Value);
+
+            }
+            catch (Exception ex)
+            {
+                return Response<JwtTokenDTO>.Failure(ex.Message);
+            }
         }
 
         public async Task<Response<RegisterInputDTO>> RegisterUserAsync(RegisterInputDTO registerInputModel)
         {
             //check if input model is empty.
-            if(registerInputModel == null)
+            if (registerInputModel == null)
             {
                 return Response<RegisterInputDTO>.Failure("input can not empty");
             }
@@ -53,18 +132,18 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                     Response<User> foundByUserNameResponse = await FindByUserNameAsync(registerInputModel.UserName);
 
                     //check response.
-                    if(foundByUserNameResponse.IsSuccessfull)
+                    if (foundByUserNameResponse.IsSuccessfull)
                     {
-                        return Response<RegisterInputDTO>.Failure("User Name is already Available.");
+                        return Response<RegisterInputDTO>.Failure(foundByUserNameResponse.ErrorMessage);
                     }
 
                     //check if user already available by Email.
                     Response<User> findByEmailResponse = await FindByEmailAsync(registerInputModel.Email);
 
                     //check response.
-                    if(findByEmailResponse.IsSuccessfull)
+                    if (findByEmailResponse.IsSuccessfull)
                     {
-                        return Response<RegisterInputDTO>.Failure("Email id is already available.");
+                        return Response<RegisterInputDTO>.Failure(findByEmailResponse.ErrorMessage);
                     }
 
                     //map registerInputModel to registerModelDTO
@@ -74,7 +153,7 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                     Response<string> passwordHashResponse = await _passwordHasher.GenerateHashAsync(registerInputModel.Password);
 
                     //check password hasher response.
-                    if(!passwordHashResponse.IsSuccessfull)
+                    if (!passwordHashResponse.IsSuccessfull)
                     {
                         return Response<RegisterInputDTO>.Failure(passwordHashResponse.ErrorMessage);
                     }
@@ -87,7 +166,7 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                     Response<User> registerUserResponse = await _authRepo.CreateUserAsync(convertToUser);
 
                     //check register response.
-                    if(!registerUserResponse.IsSuccessfull)
+                    if (!registerUserResponse.IsSuccessfull)
                     {
                         return Response<RegisterInputDTO>.Failure(registerUserResponse.ErrorMessage);
                     }
@@ -103,8 +182,6 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                 }
             }
         }
-
-
 
         private async Task<Response<User>> FindByUserNameAsync(string? userName)
         {
@@ -152,6 +229,20 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                     return Response<User>.Success(foundUserByEmailResponse.Value);
                 }
             }
+        }
+
+        private async Task<Response<JwtTokenDTO>> CreateAndSaveTokenAsync(User user)
+        {
+            //generate new access and refresh tokens.
+            Response<JwtTokenDTO> tokenGenerateResponse = await _authenticator.GenerateJwtTokensAsync(user);
+
+            if(!tokenGenerateResponse.IsSuccessfull)
+            {
+                return Response<JwtTokenDTO>.Failure(tokenGenerateResponse.ErrorMessage);
+            }
+
+            return Response<JwtTokenDTO>.Success(tokenGenerateResponse.Value);
+            //save tokens in database.
         }
 
     }
