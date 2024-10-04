@@ -8,6 +8,6 @@ namespace ShoppingCart.Services.HasherService
     public interface IPasswordHasher
     {
         Task<Response<string>> GenerateHashAsync(string password);
-        Response<User> VerifyPasswordAsync(string password, string passwordHash);
+        Response<bool> VerifyPasswordAsync(string password, string passwordHash);
     }
 }

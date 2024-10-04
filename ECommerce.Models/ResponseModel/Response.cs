@@ -1,7 +1,7 @@
 ﻿
 namespace ECommerce.Models.ResponseModel
 {
-    public class Response<T> where T : class
+    public class Response<T>
     {
         public bool IsSuccessfull { get; set; }
         public string? ErrorMessage { get; set; }
@@ -11,36 +11,6 @@ namespace ECommerce.Models.ResponseModel
         public Response()
         {
 
-        }
-
-        public Response(string? errorMessage)
-        {
-            ErrorMessage = errorMessage;
-            Value = null;
-            IsSuccessfull = false;
-        }
-
-        public Response(T entity)
-        {
-            ErrorsMessages = null;
-            Value = entity;
-            IsSuccessfull = true;
-        }
-
-        public Response(IEnumerable<string> errorsMessages)
-        {
-            ErrorsMessages = errorsMessages;
-            Value = null;
-            IsSuccessfull = false;
-        }
-
-        public Response<T> AddStringValue(T value)
-        {
-            return new Response<T>()
-            {
-                Value = value,
-                IsSuccessfull = true
-            };
         }
 
         public static Response<T> Success(T entity)
@@ -59,7 +29,7 @@ namespace ECommerce.Models.ResponseModel
             {
                 ErrorMessage = errorMessage,
                 IsSuccessfull = false,
-                Value = null
+                Value = default(T)
             };
         }
     }

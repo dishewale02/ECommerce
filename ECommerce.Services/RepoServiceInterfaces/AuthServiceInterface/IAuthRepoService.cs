@@ -6,6 +6,6 @@ namespace ECommerce.Services.RepoServiceInterfaces.AuthRepoServiceInterface
     public interface IAuthRepoService
     {
         Task<Response<RegisterInputDTO>> RegisterUserAsync(RegisterInputDTO RegisterInputModel);
-        Task<Response<LoginInputModel>> LoginUserAsync(LoginInputModel LoginInputModel);
+        Task<Response<LoginInpulDTO>> LoginUserAsync(LoginInpulDTO LoginInputModel);
     }
 }

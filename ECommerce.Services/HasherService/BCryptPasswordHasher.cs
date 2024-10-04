@@ -22,11 +22,11 @@ namespace ShoppingCart.Services.HasherService
             return Response<string>.Success(passwordHashed);
         }
 
-        public Response<User> VerifyPasswordAsync(string password, string passwordHash)
+        public Response<bool> VerifyPasswordAsync(string password, string passwordHash)
         {
             if (string.IsNullOrWhiteSpace(password))
             {
-                return Response<User>.Failure("password can not blank.");
+                return Response<bool>.Failure("password can not blank.");
             }
 
             //password validation through BCrypt tool;
@@ -34,9 +34,9 @@ namespace ShoppingCart.Services.HasherService
 
             if (isPasswordValid)
             {
-                return Response<User>.Success(new User());
+                return Response<bool>.Success(true);
             }
-            return Response<User>.Failure("password is not valid.");
+            return Response<bool>.Failure("password is not valid.");
         }
     }
 }

@@ -21,9 +21,9 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
             _passwordHasher = passwordHasher;
         }
 
-        public Task<Response<LoginInputModel>> LoginUserAsync(LoginInputModel loginInputModel)
+        public Task<Response<LoginInpulDTO>> LoginUserAsync(LoginInpulDTO loginInputModel)
         {
-            throw new NotImplementedException();
+            
         }
 
         public async Task<Response<RegisterInputDTO>> RegisterUserAsync(RegisterInputDTO registerInputModel)
@@ -31,7 +31,7 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
             //check if input model is empty.
             if(registerInputModel == null)
             {
-                return new Response<RegisterInputDTO>("input can not empty");
+                return Response<RegisterInputDTO>.Failure("input can not empty");
             }
             else
             {
@@ -103,6 +103,8 @@ namespace ECommerce.Services.RepoServiceClasses.AuthRepoServiceClass
                 }
             }
         }
+
+
 
         private async Task<Response<User>> FindByUserNameAsync(string? userName)
         {
