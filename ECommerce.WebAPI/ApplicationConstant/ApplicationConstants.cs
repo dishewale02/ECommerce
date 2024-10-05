@@ -4,5 +4,6 @@
     {
         public const string AUTH_DB_CONNECTION = "AuthDbConnection";
         public const string AUTH_CONNECTION_STRING_JWT = "JwtAuthenticationString";
+        public const string AUTH_EMAIL_SETTINGS = "EmailSettings";
     }
 }
