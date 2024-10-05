@@ -9,7 +9,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ECommerce.WebAPI/ECommerce.WebAPI.csproj", "ECommerce.WebAPI/"]
+COPY ["ECommerce.WebAPI.csproj", "ECommerce.WebAPI/"]
 RUN dotnet restore "./ECommerce.WebAPI/ECommerce.WebAPI.csproj"
 COPY . .
 WORKDIR "/src/ECommerce.WebAPI"
