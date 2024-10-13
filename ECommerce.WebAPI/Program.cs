@@ -1,14 +1,17 @@
 using ECommerce.Data;
 using ECommerce.Models.DataModels;
+using ECommerce.Models.InputModelsDTO.EmailSenderDTO;
 using ECommerce.Repo.Classes.AuthRepoClasses;
 using ECommerce.Repo.Interfaces.AuthRepoInterface;
 using ECommerce.Services.Classes.AutoMapperService;
 using ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass;
+using ECommerce.Services.Classes.RepoServiceClasses.EmailServiceClass;
 using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass;
 using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.AccessTokenGeneratorClass;
 using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.RefreshTokenGeneratorClass;
 using ECommerce.Services.Classes.RepoServiceClasses.PasswordHasherServiceClass;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.EmailServiceInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.JwtTokenGeneratorInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface;
 using ECommerce.WebAPI.ApplicationConstant;
@@ -36,6 +39,21 @@ builder.Services.AddScoped<IAuthenticator, Authenticator>();
 builder.Services.AddScoped<AccessTokenGenerator>();
 builder.Services.AddScoped<RefreshTokenGenerator>();
 builder.Services.AddScoped<TokenWriter>();
+
+//configure email settings.
+var emailConfig = builder.Configuration.GetSection(ApplicationConstants.AUTH_EMAIL_SETTINGS).Get<EmailSettings>();
+builder.Services.AddSingleton(emailConfig);
+
+builder.Services.AddSingleton<IEmailService, EmailService>();
+
+//allow cors policies.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigin",
+        builder => builder.AllowAnyOrigin()//.WithOrigins("http://localhost:5173/") // Replace with your frontend URL
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 
 //get connection string from appsetting.json for authentication.
 AuthenticationConfig _authConfig = new AuthenticationConfig();
@@ -68,6 +86,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+//use cors policies.
+app.UseCors("AllowAllOrigin");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

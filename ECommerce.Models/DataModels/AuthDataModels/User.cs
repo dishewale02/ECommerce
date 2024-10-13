@@ -16,5 +16,8 @@ namespace ECommerce.Models.DataModels.AuthDataModels
         [Required]
         public string? Email { get; set; }
         public string? Phone { get; set; }
+
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
     }
 }
