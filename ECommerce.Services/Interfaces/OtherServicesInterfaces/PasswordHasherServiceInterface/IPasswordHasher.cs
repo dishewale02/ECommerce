@@ -1,9 +1,7 @@
-﻿
-
-using ECommerce.Models.DataModels.AuthDataModels;
+﻿using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.ResponseModel;
 
-namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface
+namespace ECommerce.Services.Interfaces.OtherServicesInterfaces.PasswordHasherServiceInterface
 {
     public interface IPasswordHasher
     {

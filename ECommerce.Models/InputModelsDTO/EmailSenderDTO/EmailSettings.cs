@@ -1,4 +1,6 @@
 ﻿
+using ECommerce.Models.DataModels.InfoModel;
+
 namespace ECommerce.Models.InputModelsDTO.EmailSenderDTO
 {
     public class EmailSettings

@@ -2,7 +2,7 @@
 
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.ResponseModel;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface;
+using ECommerce.Services.Interfaces.OtherServicesInterfaces.PasswordHasherServiceInterface;
 
 namespace ECommerce.Services.Classes.RepoServiceClasses.PasswordHasherServiceClass
 {

@@ -1,9 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ECommerce.Models.DataModels.InfoModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
 {
-    public class RegisterInputDTO
+    public class UserInputDTO: IIdentityModel
     {
+        public string? Id { get; set; }
         [Required]
         public string? FirstName { get; set; }
         [Required]
@@ -16,6 +18,8 @@ namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
         public string? Password { get; set; }
         [Required]
         public string? ConfirmPassword { get; set; }
+        public string? PasswordHash { get; set; }
         public string? Phone { get; set; }
+        public string? Role { get; set; }
     }
 }

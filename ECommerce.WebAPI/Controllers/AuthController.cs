@@ -1,13 +1,12 @@
 ﻿using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
-using ECommerce.Models.InputModelsDTO.EmailSenderDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.EmailServiceInterface;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ECommerce.WebAPI.Controllers
 {
@@ -16,19 +15,17 @@ namespace ECommerce.WebAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepoService _authRepoService;
-        private readonly IEmailService _emailService;
-        private readonly EmailSettings _emailSettings;
+        private readonly IGenericRepoService<UserInputDTO, User> _genericRepoService;
 
-        public AuthController(IAuthRepoService authRepoService, IEmailService emailService, EmailSettings emailSettings)
+        public AuthController(IAuthRepoService authRepoService, IGenericRepoService<UserInputDTO, User> genericRepoService)
         {
             _authRepoService = authRepoService;
-            _emailService = emailService;
-            _emailSettings = emailSettings;
+            _genericRepoService = genericRepoService;
         }
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterInputDTO registerModel)
+        public async Task<IActionResult> Register([FromBody] UserInputDTO registerModel)
         {
             //check if input model is valid or not.
             if(!ModelState.IsValid)
@@ -40,7 +37,7 @@ namespace ECommerce.WebAPI.Controllers
                 try
                 {
                     //send Register Input Model to service layer.
-                    Response<RegisterInputDTO> registerServiceResponse = await _authRepoService.RegisterUserAsync(registerModel);
+                    Response<UserInputDTO> registerServiceResponse = await _authRepoService.RegisterUserAsync(registerModel);
 
                     //check if response has error.
                     if(!registerServiceResponse.IsSuccessfull)
@@ -54,7 +51,7 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch(Exception ex) 
                 {
-                    return StatusCode(200, new Response<RegisterInputDTO>() { ErrorMessage = ex.Message });
+                    return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
                 }
             }
         }
@@ -87,7 +84,7 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<RegisterInputDTO>() { ErrorMessage = ex.Message });
+                    return StatusCode(200, new Response<LoginInpulDTO>() { ErrorMessage = ex.Message });
                 }
             }
         }
@@ -101,42 +98,95 @@ namespace ECommerce.WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            //send email id to verify availablity in database.
-            Response<User> foundUserResponse = await _authRepoService.FindByEmailAsync(model.Email);
-            if (!foundUserResponse.IsSuccessfull)
+            //call forgot password method.
+
+            Response<string> forgotPasswordResponse = await _authRepoService.ForgotPasswordAsync(model);
+            
+            //check response.
+            if(!forgotPasswordResponse.IsSuccessfull)
             {
-                return BadRequest("User does not exist or email not confirmed.");
+                return Ok(forgotPasswordResponse.ErrorMessage);
+
             }
 
-            // Generate reset token and expiry
-            foundUserResponse.Value.ResetToken = Guid.NewGuid().ToString();
-            foundUserResponse.Value.ResetTokenExpiry = DateTime.Now.AddHours(1); // Token valid for 1 hour
-
-            //update User in database wit reset token.
-
-
-            //generate reset password link.
-            string resetLink = $"{Request.Scheme}://{_emailSettings.ReturnRequestServer}/reset-password/{foundUserResponse.Value.ResetToken}/{_emailSettings.ToEmail}";
-
-            //send email with reset link.
-            await _emailService.SendEmailAsync(foundUserResponse.Value.Email, "Reset Password", $"Click <a href='{resetLink}'>here</a> to reset your password.");
-
-            return Ok("Password reset link has been sent to your email.");
+            return Ok(forgotPasswordResponse.Value.ToString());
         }
 
         [HttpPost]
         [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordInputDTO model)
         {
-            return Ok("password reset successfully");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            //get response from reset password function.
+            Response<bool> ResetPasswordResponse = await _authRepoService.ResetPasswordAsync(model);
+
+            if(!ResetPasswordResponse.IsSuccessfull)
+            {
+                return StatusCode(200, ResetPasswordResponse);
+            }
+
+            return Ok(ResetPasswordResponse);
+        }
+
+        [HttpPost]
+        [Route("check-forgot-password-token")]
+        public async Task<IActionResult> CheckForgotPasswordToken([FromBody] CheckForgotPasswordTokenModel model)
+        {
+            try
+            {
+                //call check forgot password service.
+                Response<bool> checkForgotPasswordTokenResponse = await _authRepoService.CheckForgotPasswordTokenAsync(model);
+
+                if(!checkForgotPasswordTokenResponse.IsSuccessfull)
+                {
+                    return Ok(Response<bool>.Failure(checkForgotPasswordTokenResponse.ErrorMessage));
+                }
+
+                return Ok(Response<bool>.Success(true));
+            }
+            catch (Exception ex) 
+            {
+                return Ok(Response<bool>.Failure(ex.Message));
+            }
+
         }
 
         [HttpGet]
-        [Route("test")]
+        [Route("get-user-details")]
         [Authorize]
-        public async Task<IActionResult> Test()
+        public async Task<IActionResult> GetUserDetails()
         {
-            return Ok("You are authorised");
+            try
+            {
+                string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+                string? email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                string? userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                string? role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+                //check if id is null.
+                if(string.IsNullOrEmpty(id))
+                {
+                    return BadRequest("user id is not available.");
+                }
+
+                //get user from User Id.
+                Response<UserInputDTO> getUserResponse = await _genericRepoService.GetAsync(id);
+
+                if(!getUserResponse.IsSuccessfull)
+                {
+                    return Ok(getUserResponse);
+                }
+
+                return Ok(getUserResponse.Value);
+            }
+            catch(Exception ex)
+            {
+                return Ok(ex.Message);
+            }
         }
     }
 }

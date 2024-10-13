@@ -1,16 +1,14 @@
 ﻿
+using ECommerce.Models.DataModels.InfoModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
 {
-    public class ResetPasswordModel
+    public class ResetPasswordInputDTO
     {
-        [Required]
-        public string Token { get; set; }
 
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        public string Token { get; set; }
 
         [Required]
         [MinLength(6)]

@@ -1,4 +1,6 @@
-﻿
+﻿using ECommerce.Models.DataModels.InfoModel;
+using System.ComponentModel.DataAnnotations;
+
 namespace ECommerce.Models.InputModelsDTO.AuthOutputModelDTO
 {
     public class JwtTokenDTO

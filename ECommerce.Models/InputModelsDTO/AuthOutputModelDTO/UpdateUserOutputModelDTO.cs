@@ -1,10 +1,13 @@
-﻿using ECommerce.Models.DataModels.InfoModel;
+﻿
+using ECommerce.Models.DataModels.InfoModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Models.DataModels.AuthDataModels
+namespace ECommerce.Models.InputModelsDTO.AuthOutputModelDTO
 {
-    public class User: GenericInfo
+    public class UpdateUserOutputModelDTO: IIdentityModel
     {
+        public string? Id { get; set; }
+
         [Required]
         public string? FirstName { get; set; }
         [Required]
@@ -16,8 +19,5 @@ namespace ECommerce.Models.DataModels.AuthDataModels
         [Required]
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        [Required]
-        public string? Role { get; set; } = "User";
-
     }
 }

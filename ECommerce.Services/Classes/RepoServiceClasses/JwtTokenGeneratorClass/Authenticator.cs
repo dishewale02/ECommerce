@@ -3,7 +3,7 @@ using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.AccessTokenGeneratorClass;
 using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.RefreshTokenGeneratorClass;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.JwtTokenGeneratorInterface;
+using ECommerce.Services.Interfaces.OtherServicesInterfaces.JwtTokenGeneratorInterface;
 
 namespace ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass
 {

@@ -1,5 +1,5 @@
 ﻿using ECommerce.Models.InputModelsDTO.EmailSenderDTO;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.EmailServiceInterface;
+using ECommerce.Services.Interfaces.OtherServicesInterfaces.EmailServiceInterface;
 using MailKit.Net.Smtp;
 using MimeKit;
 

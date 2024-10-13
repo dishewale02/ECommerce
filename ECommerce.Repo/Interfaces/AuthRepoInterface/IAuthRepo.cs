@@ -9,5 +9,8 @@ namespace ECommerce.Repo.Interfaces.AuthRepoInterface
         Task<Response<User>> CreateUserAsync(User userModel);
         Task<Response<User>> FindByEmailAsync(string email);
         Task<Response<User>> FindByUserNameAsync(string userName);
+        Task<Response<User>> UpdateUserDataAsync(string id, User model);
+        Task<Response<JwtToken>> SaveTokenInDatabaseAsync(JwtToken jwtToken);
+        Task<Response<User>> FindUserAsync(string username);
     }
 }

@@ -1,4 +1,5 @@
 ﻿
+using ECommerce.Models.DataModels.InfoModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
