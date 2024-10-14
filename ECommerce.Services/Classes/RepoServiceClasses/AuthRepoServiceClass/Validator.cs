@@ -84,5 +84,28 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
             }
         }
 
+        public async Task<Response<User>> FindByMobileNumberAsync(string? phone)
+        {
+            //check if input is null.
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return Response<User>.Failure("input email string is null.");
+            }
+            else
+            {
+                //get find user by Email id.
+                Response<User> foundUserByPhoneResponse = await _authRepo.FindUserByPhoneAsync(phone);
+
+                //check response.
+                if (!foundUserByPhoneResponse.IsSuccessfull)
+                {
+                    return Response<User>.Failure(foundUserByPhoneResponse.ErrorMessage);
+                }
+                else
+                {
+                    return Response<User>.Success(foundUserByPhoneResponse.Value);
+                }
+            }
+        }
     }
 }

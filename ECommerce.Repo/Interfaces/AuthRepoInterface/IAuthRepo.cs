@@ -13,5 +13,6 @@ namespace ECommerce.Repo.Interfaces.AuthRepoInterface
         Task<Response<JwtToken>> SaveTokenInDatabaseAsync(JwtToken jwtToken);
         Task<Response<User>> FindUserAsync(string username);
         Task<Response<JwtToken>> GetTokenDetailsAsync(string refreshToken);
+        Task<Response<User>> FindUserByPhoneAsync(string phone);
     }
 }

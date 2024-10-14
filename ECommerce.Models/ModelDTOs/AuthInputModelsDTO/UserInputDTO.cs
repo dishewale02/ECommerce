@@ -19,6 +19,7 @@ namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
         [Required]
         public string? ConfirmPassword { get; set; }
         public string? PasswordHash { get; set; }
+        [Required]
         public string? Phone { get; set; }
         public string? Role { get; set; }
     }

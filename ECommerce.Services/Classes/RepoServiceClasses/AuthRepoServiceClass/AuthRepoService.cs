@@ -96,7 +96,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
         public async Task<Response<UserInputDTO>> RegisterUserAsync(UserInputDTO registerInputModel)
         {
             //check if input model is empty.
-            if (registerInputModel == null)
+            if (registerInputModel is null || registerInputModel.Password is null)
             {
                 return Response<UserInputDTO>.Failure("input can not empty");
             }
@@ -113,28 +113,19 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
                         return Response<UserInputDTO>.Failure(inputUserValidatorResponse.ErrorMessage);
                     }
 
-                    //create new UserInputDTO instance.
-                    Response<User> foundUserResponse = new Response<User>();
-
                     //check if User already available by UserName.
                     Response<User> foundByUserName = await _validator.FindByUserNameAsync(registerInputModel.UserName);
 
                     //check if user already available by Email.
                     Response<User> foundByEmail = await _validator.FindByEmailAsync(registerInputModel.Email);
 
-                    //check response.
-                    if (foundByEmail.IsSuccessfull || foundByUserName.IsSuccessfull)
-                    {
-                        return Response<UserInputDTO>.Failure("user already available.");
-                    }
+                    //check if mobile number is already registered.
+                    Response<User> foundByMobileNumber = await _validator.FindByMobileNumberAsync(registerInputModel.Phone);
 
-                    if (foundByUserName.IsSuccessfull)
+                    //check response.
+                    if (foundByEmail.IsSuccessfull || foundByUserName.IsSuccessfull || foundByMobileNumber.IsSuccessfull)
                     {
-                        foundUserResponse = foundByUserName;
-                    }
-                    else
-                    {
-                        foundUserResponse = foundByEmail;
+                        return Response<UserInputDTO>.Failure("user or mobile number already registered.");
                     }
 
                     //map registerInputModel to User

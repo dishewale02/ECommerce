@@ -218,5 +218,31 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 return Response<JwtToken>.Failure(ex.Message);
             }
         }
+        public async Task<Response<User>> FindUserByPhoneAsync(string phoneNumber)
+        {
+            try
+            {
+                //check if input userName is null.
+                if (string.IsNullOrWhiteSpace(phoneNumber))
+                {
+                    return Response<User>.Failure("UserName is blank.");
+                }
+
+                //find if database is having email id or not.
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Phone == phoneNumber);
+
+                //check if found user is null.
+                if (foundUserInDatabase is null)
+                {
+                    return Response<User>.Failure("User not Found");
+                }
+
+                return Response<User>.Success(foundUserInDatabase);
+            }
+            catch (Exception ex)
+            {
+                return Response<User>.Failure(ex.Message);
+            }
+        }
     }
 }
