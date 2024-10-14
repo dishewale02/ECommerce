@@ -3,17 +3,18 @@ using ECommerce.Data;
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.ResponseModel;
+using ECommerce.Repo.Classes.GenericRepoClass;
 using ECommerce.Repo.Interfaces.AuthRepoInterface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ECommerce.Repo.Classes.AuthRepoClasses
 {
-    public class AuthRepo : IAuthRepo
+    public class AuthRepo : GenericRepo<User>, IAuthRepo
     {
         private readonly ApplicationDbContext _dbContext;
 
-        public AuthRepo(ApplicationDbContext dbContext)
+        public AuthRepo(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
@@ -104,7 +105,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
             }
         }
 
-        public async Task<Response<User>> UpdateUserDataAsync(string id, User model)
+        public async Task<Response<User>> UpdateUserDataAsync(User model)
         {
             try
             {
@@ -114,7 +115,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 }
 
                 //update the user in database.
-                User? updatedUserInDatabaseResponse = await _dbContext.Users.FindAsync(id);
+                User? updatedUserInDatabaseResponse = await _dbContext.Users.FindAsync(model.Id);
 
                 if (updatedUserInDatabaseResponse is null)
                 {
@@ -194,6 +195,27 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
             catch (Exception ex)
             {
                 return Response<User>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Response<JwtToken>> GetTokenDetailsAsync(string refreshToken)
+        {
+            try
+            {
+                //find token details in database.
+                JwtToken foundTokenDetails = await _dbContext.JwtTokens.FirstAsync(x => x.RefreshToken == refreshToken);
+
+                //check resposne.
+                if (foundTokenDetails is null)
+                {
+                    return Response<JwtToken>.Failure("refresh token invalid.");
+                }
+
+                return Response<JwtToken>.Success(foundTokenDetails);
+            }
+            catch(Exception ex)
+            {
+                return Response<JwtToken>.Failure(ex.Message);
             }
         }
     }

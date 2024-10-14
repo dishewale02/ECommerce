@@ -6,6 +6,6 @@ namespace ECommerce.Services.Interfaces.OtherServicesInterfaces.JwtTokenGenerato
 {
     public interface IAuthenticator
     {
-        Task<Response<JwtTokenDTO>> GenerateJwtTokensAsync(User user);
+        Task<Response<TokensOutputDTO>> GenerateJwtTokensAsync(User user);
     }
 }

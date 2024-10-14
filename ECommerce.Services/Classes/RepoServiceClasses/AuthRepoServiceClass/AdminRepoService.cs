@@ -2,6 +2,7 @@
 using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.DataModels.InfoModel;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
+using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Classes.GenericRepoClass;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;

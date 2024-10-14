@@ -1,7 +1,9 @@
-﻿using ECommerce.Models.DataModels.AuthDataModels;
+﻿using AutoMapper;
+using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
+using ECommerce.Services.Interfaces.OtherServicesInterfaces.JwtTokenGeneratorInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;
@@ -15,12 +17,22 @@ namespace ECommerce.WebAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepoService _authRepoService;
-        private readonly IGenericRepoService<UserInputDTO, User> _genericRepoService;
+        private readonly IGenericRepoService<UserInputDTO, User> _genSerForUserInputDTO;
+        private readonly IGenericRepoService<GetUserDetailsOutputDTO, User> _getSerForGetUserDetailsOutputDTO;
+        private readonly IMapper _mapper;
+        private readonly IAuthenticator _authenticator;
 
-        public AuthController(IAuthRepoService authRepoService, IGenericRepoService<UserInputDTO, User> genericRepoService)
+        public AuthController(IAuthRepoService authRepoService,
+            IMapper mapper,
+            IGenericRepoService<UserInputDTO, User> genSerForUserInputDTO, 
+            IGenericRepoService<GetUserDetailsOutputDTO, User> getSerForGetUserDetailsOutputDTO,
+            IAuthenticator authenticator)
         {
             _authRepoService = authRepoService;
-            _genericRepoService = genericRepoService;
+            _mapper = mapper;
+            _genSerForUserInputDTO = genSerForUserInputDTO;
+            _getSerForGetUserDetailsOutputDTO = getSerForGetUserDetailsOutputDTO;
+            _authenticator = authenticator;
         }
 
         [HttpPost]
@@ -70,12 +82,12 @@ namespace ECommerce.WebAPI.Controllers
                 try
                 {
                     //send LogIn Input Model to service layer.
-                    Response<JwtTokenDTO> registerServiceResponse = await _authRepoService.LoginUserAsync(loginInpulDTO);
+                    Response<TokensOutputDTO> registerServiceResponse = await _authRepoService.LoginUserAsync(loginInpulDTO);
 
                     //check if response has error.
                     if (!registerServiceResponse.IsSuccessfull)
                     {
-                        return StatusCode(200, registerServiceResponse);
+                        return Ok(registerServiceResponse);
                     }
                     else
                     {
@@ -84,7 +96,7 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<LoginInpulDTO>() { ErrorMessage = ex.Message });
+                    return Ok(Response<TokensOutputDTO>.Failure(ex.Message));
                 }
             }
         }
@@ -167,26 +179,136 @@ namespace ECommerce.WebAPI.Controllers
                 string? userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
                 string? role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
+                var refreshToken = Request.Cookies["refreshToken"]; // Get the refresh token from the HTTP-only cookie
+
                 //check if id is null.
-                if(string.IsNullOrEmpty(id))
+                if (string.IsNullOrEmpty(id))
                 {
                     return BadRequest("user id is not available.");
                 }
 
                 //get user from User Id.
-                Response<UserInputDTO> getUserResponse = await _genericRepoService.GetAsync(id);
+                Response<GetUserDetailsOutputDTO> getUserResponse = await _getSerForGetUserDetailsOutputDTO.GetAsync(id);
 
                 if(!getUserResponse.IsSuccessfull)
                 {
                     return Ok(getUserResponse);
                 }
 
-                return Ok(getUserResponse.Value);
+                return Ok(getUserResponse);
             }
             catch(Exception ex)
             {
-                return Ok(ex.Message);
+                return Ok(Response<GetUserDetailsOutputDTO>.Failure(ex.Message));
             }
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("update-user")]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserInputDTO updateUserInputModelDTO)
+        {
+            //check if input model is valid or not.
+            if (!ModelState.IsValid)
+            {
+                return Ok("input is not valid");
+            }
+            else
+            {
+                try
+                {
+                    if (!User.Identity.IsAuthenticated)
+                    {
+                        return Ok("user is not authenticated.");
+                    }
+
+                    //get user claims.
+                    UserClaimModel loggedInUserClaims = await GetUserClaims();
+
+                    //send Create User Request to service layer.
+                    Response<UpdateUserInputDTO> updateUserServiceResponse = await _authRepoService.UpdateUserAsync(updateUserInputModelDTO, loggedInUserClaims);
+
+                    //check if response has error.
+                    if (!updateUserServiceResponse.IsSuccessfull)
+                    {
+                        return Ok(updateUserServiceResponse);
+                    }
+                    else
+                    {
+                        return Ok(updateUserServiceResponse);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Ok(Response<UpdateUserInputDTO>.Failure(ex.Message));
+                }
+            }
+        }
+
+        [HttpPost]
+        [Route("request-token")]
+        public async Task<IActionResult> RequestToken([FromBody] RequestTokenInputDTO tokenRequest)
+        {
+            //check if the refreshToken Is available in database or not.
+            string refreshToken = tokenRequest.RefreshToken;
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return BadRequest(new { message = "No refresh token provided" });
+            }
+
+            //check if refresh token exist in database.
+            Response<JwtTokenOutputDTO> foundTokenResponse = await _authRepoService.GetTokenDetailsAsync(refreshToken);
+
+            //check response.
+            if(!foundTokenResponse.IsSuccessfull || foundTokenResponse.Value.UserId == null)
+            {
+                return Ok(foundTokenResponse);
+            }
+
+            //Check if the token has expired
+            if (foundTokenResponse.Value.RefreshTokenValidityTill < DateTime.UtcNow)
+            {
+                return Ok(Response<JwtTokenOutputDTO>.Failure("refresh token expired."));
+            }
+
+            //find the user from User id.
+            Response<GetUserDetailsOutputDTO> foundUserDetailsResponse = await _getSerForGetUserDetailsOutputDTO.GetAsync(foundTokenResponse.Value.UserId);
+
+            if(!foundUserDetailsResponse.IsSuccessfull)
+            {
+                return Ok(foundUserDetailsResponse);
+            }
+
+            //Token is valid, so generate new access and refresh tokens and save in database.
+            Response<TokensOutputDTO> generateTokensResponse = await _authRepoService.GetDirectTokensAsync(foundUserDetailsResponse.Value.UserName);
+
+            //check response.
+            if(!generateTokensResponse.IsSuccessfull)
+            {
+                return Ok(generateTokensResponse);
+            }
+
+            return Ok(generateTokensResponse);
+        }
+
+        private async Task<UserClaimModel> GetUserClaims()
+        {
+            string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            string? email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            string? userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            string? role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            //create new UserClaimModel
+            UserClaimModel userClaimModel = new UserClaimModel()
+            {
+                Id = id,
+                Email = email,
+                UserName = userName,
+                Role = role
+            };
+
+            return userClaimModel;
         }
     }
 }

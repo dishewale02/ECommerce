@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.InputModelsDTO.AuthOutputModelDTO
 {
-    public class UpdateUserOutputModelDTO: IIdentityModel
+    public class UpdateUserOutputDTO: IIdentityModel
     {
         public string? Id { get; set; }
 

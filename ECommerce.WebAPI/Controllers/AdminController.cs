@@ -78,7 +78,7 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         [Route("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UserInputDTO updateUserInputModelDTO)
         {
@@ -221,5 +221,7 @@ namespace ECommerce.WebAPI.Controllers
 
             return userClaimModel;
         }
+
+
     }
 }

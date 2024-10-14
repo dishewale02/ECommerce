@@ -45,14 +45,14 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
             _validator = validator;
         }
 
-        public async Task<Response<JwtTokenDTO>> LoginUserAsync(LoginInpulDTO loginInputModel)
+        public async Task<Response<TokensOutputDTO>> LoginUserAsync(LoginInpulDTO loginInputModel)
         {
             try
             {
                 //find if user is null or not.
                 if (loginInputModel is null || loginInputModel.Password is null || loginInputModel.UserName is null)
                 {
-                    return Response<JwtTokenDTO>.Failure("provided input is not valid.");
+                    return Response<TokensOutputDTO>.Failure("provided input is not valid.");
                 }
 
                 //validate username in database by both username or email perameter.
@@ -64,7 +64,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 
                     if (!foundUserResponse.IsSuccessfull)
                     {
-                        return Response<JwtTokenDTO>.Failure(foundUserResponse.ErrorMessage);
+                        return Response<TokensOutputDTO>.Failure(foundUserResponse.ErrorMessage);
                     }
                 }
                 
@@ -73,23 +73,23 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 
                 if (!verifyPasswordInDatabaseResponse.IsSuccessfull)
                 {
-                    return Response<JwtTokenDTO>.Failure(verifyPasswordInDatabaseResponse.ErrorMessage);
+                    return Response<TokensOutputDTO>.Failure(verifyPasswordInDatabaseResponse.ErrorMessage);
                 }
 
                 //create and save token
-                Response<JwtTokenDTO> tokenCreationAndSaveResponse = await CreateAndSaveTokenAsync(foundUserResponse.Value);
+                Response<TokensOutputDTO> tokenCreationAndSaveResponse = await CreateAndSaveTokenAsync(foundUserResponse.Value);
 
                 if (!tokenCreationAndSaveResponse.IsSuccessfull)
                 {
-                    return Response<JwtTokenDTO>.Failure(tokenCreationAndSaveResponse.ErrorMessage);
+                    return Response<TokensOutputDTO>.Failure(tokenCreationAndSaveResponse.ErrorMessage);
                 }
 
-                return Response<JwtTokenDTO>.Success(tokenCreationAndSaveResponse.Value);
+                return Response<TokensOutputDTO>.Success(tokenCreationAndSaveResponse.Value);
 
             }
             catch (Exception ex)
             {
-                return Response<JwtTokenDTO>.Failure(ex.Message);
+                return Response<TokensOutputDTO>.Failure(ex.Message);
             }
         }
 
@@ -176,20 +176,20 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
             }
         }
 
-        public async Task<Response<JwtTokenDTO>> CreateAndSaveTokenAsync(User user)
+        public async Task<Response<TokensOutputDTO>> CreateAndSaveTokenAsync(User user)
         {
             //check if user is null or not.
             if(user.Id == null || user == null)
             {
-                return Response<JwtTokenDTO>.Failure("User not available.");
+                return Response<TokensOutputDTO>.Failure("User not available.");
             }
 
             //generate new access and refresh tokens.
-            Response<JwtTokenDTO> tokenGenerateResponse = await _authenticator.GenerateJwtTokensAsync(user);
+            Response<TokensOutputDTO> tokenGenerateResponse = await _authenticator.GenerateJwtTokensAsync(user);
 
             if(!tokenGenerateResponse.IsSuccessfull)
             {
-                return Response<JwtTokenDTO>.Failure(tokenGenerateResponse.ErrorMessage);
+                return Response<TokensOutputDTO>.Failure(tokenGenerateResponse.ErrorMessage);
             }
 
             //map JwtTokenDTO to JwtToken.
@@ -212,51 +212,75 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 
             if(!saveTokenInDatabaseResponse.IsSuccessfull)
             {
-                return Response<JwtTokenDTO>.Failure(saveTokenInDatabaseResponse.ErrorMessage);
+                return Response<TokensOutputDTO>.Failure(saveTokenInDatabaseResponse.ErrorMessage);
             }
 
-            return Response<JwtTokenDTO>.Success(tokenGenerateResponse.Value);
+            return Response<TokensOutputDTO>.Success(tokenGenerateResponse.Value);
         }
 
-        public async Task<Response<UpdateUserOutputModelDTO>> UpdateUserAsync(UpdateUserInputModelDTO UpdateUserInputModelDTO)
+        public async Task<Response<UpdateUserInputDTO>> UpdateUserAsync(UpdateUserInputDTO updateUserInput, UserClaimModel userClaimModel)
         {
-            //check input User information is null 
-            if(UpdateUserInputModelDTO == null || UpdateUserInputModelDTO.UserName == null)
+            try
             {
-                return Response<UpdateUserOutputModelDTO>.Failure("input User details can not be blank.");
+                //check if input entity is null.
+                if (updateUserInput is null || userClaimModel is null)
+                {
+                    return Response<UpdateUserInputDTO>.Failure("entity can not be null.");
+                }
+
+                UserInputDTO mappedUserInputDTOFromUpdateUserInputDTO = _mapper.Map<UserInputDTO>(updateUserInput);
+
+                //create new UserInputDTO instance.
+                User newUserInstance = new User();
+
+                //check if User already available by UserName.
+                Response<User> foundByUserName = await _validator.FindByUserNameAsync(updateUserInput.UserName);
+
+                //check if user already available by Email.
+                Response<User> foundByEmail = await _validator.FindByEmailAsync(updateUserInput.Email);
+
+                //check response.
+                if (!foundByEmail.IsSuccessfull && !foundByUserName.IsSuccessfull)
+                {
+                    return Response<UpdateUserInputDTO>.Failure(foundByEmail.ErrorMessage);
+                }
+
+                if (foundByUserName.IsSuccessfull)
+                {
+                    newUserInstance = foundByUserName.Value;
+                }
+                else
+                {
+                    newUserInstance = foundByEmail.Value;
+                }
+
+                //update required fields from the mappedUserModel.
+                newUserInstance.UserName = updateUserInput.UserName;
+                newUserInstance.FirstName = updateUserInput.FirstName;
+                newUserInstance.LastName = updateUserInput.LastName;
+                newUserInstance.Email = updateUserInput.Email;
+                newUserInstance.Phone = updateUserInput.Phone;
+                newUserInstance.ModifiedBy = userClaimModel.UserName;
+                newUserInstance.ModifiedOn = DateTime.UtcNow;
+
+                //send the updated model to the database.
+                Response<User> updatedResponse = await _authRepo.UpdateUserDataAsync(newUserInstance);
+
+                //check response.
+                if (!updatedResponse.IsSuccessfull)
+                {
+                    return Response<UpdateUserInputDTO>.Failure(updatedResponse.ErrorMessage);
+                }
+
+                //mapp User to UserInputDTO.
+                UpdateUserInputDTO mappedUserToUserInputDTO = _mapper.Map<UpdateUserInputDTO>(updatedResponse.Value);
+
+                return Response<UpdateUserInputDTO>.Success(mappedUserToUserInputDTO);
             }
-
-            //check if the user is already available in database or not.
-            Response<User> foundUserInDatabase = await _validator.FindByUserNameAsync(UpdateUserInputModelDTO.UserName);
-
-            if(!foundUserInDatabase.IsSuccessfull)
+            catch (Exception ex)
             {
-                return Response<UpdateUserOutputModelDTO>.Failure(foundUserInDatabase.ErrorMessage);
+                return Response<UpdateUserInputDTO>.Failure(ex.Message);
             }
-
-            //map the UpdateUserInputModelDTO to User.
-            User mappedUser = _mapper.Map<User>(UpdateUserInputModelDTO);
-
-            //find User in database.
-            Response<User> findUserResponse = await _authRepo.FindUserAsync(UpdateUserInputModelDTO.UserName);
-
-            if (!findUserResponse.IsSuccessfull || findUserResponse.Value.Id == null)
-            {
-                return Response<UpdateUserOutputModelDTO>.Failure(findUserResponse.ErrorMessage);
-            }
-
-            //send Updated user model to update data in database.
-            Response<User> updatedUserResponse = await _authRepo.UpdateUserDataAsync(findUserResponse.Value.Id, mappedUser);
-
-            if(!updatedUserResponse.IsSuccessfull)
-            {
-                return Response<UpdateUserOutputModelDTO>.Failure(updatedUserResponse.ErrorMessage);
-            }
-
-            //mapp User to UpdatedUserOutputModel.
-            UpdateUserOutputModelDTO updateUserOutputModelDTO = _mapper.Map<UpdateUserOutputModelDTO>(updatedUserResponse.Value);
-
-            return Response<UpdateUserOutputModelDTO>.Success(updateUserOutputModelDTO);
         }
 
         public async Task<Response<bool>> ResetPasswordAsync(ResetPasswordInputDTO model)
@@ -282,10 +306,9 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
                 foundUserResponse.Value.PasswordHash = passwordHashResponse.Value;
 
                 //map UserOutputDTO to UpdateUserInputModelDTO
-                UpdateUserInputModelDTO updateUserOutputModelDTO = _mapper.Map<UpdateUserInputModelDTO>(foundUserResponse.Value);
+                UpdateUserInputDTO updateUserOutputModelDTO = _mapper.Map<UpdateUserInputDTO>(foundUserResponse.Value);
 
-                //update user in database.
-                Response<UpdateUserOutputModelDTO> updatedUserResponse = await UpdateUserAsync(updateUserOutputModelDTO);
+                Response<User> updatedUserResponse = await _authRepo.UpdateUserDataAsync(foundUserResponse.Value);
 
                 if (!updatedUserResponse.IsSuccessfull)
                 {
@@ -371,6 +394,50 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
             {
                 return Response<bool>.Failure(ex.Message);
             }
+        }
+
+        public async Task<Response<JwtTokenOutputDTO>> GetTokenDetailsAsync(string refreshToken)
+        {
+            //check if input refresh Token is null.
+            if(string.IsNullOrEmpty(refreshToken))
+            {
+                return Response<JwtTokenOutputDTO>.Failure("Refresh Token is not available.");
+            }
+
+            //find token details in database.
+            Response<JwtToken> foundTokenDetailsResponse = await _authRepo.GetTokenDetailsAsync(refreshToken);
+
+            //check response.
+            if(!foundTokenDetailsResponse.IsSuccessfull)
+            {
+                return Response<JwtTokenOutputDTO>.Failure(foundTokenDetailsResponse.ErrorMessage);
+            }
+
+            JwtTokenOutputDTO mappedJwtTokenToJwtTokenOutputDTO = _mapper.Map<JwtTokenOutputDTO>(foundTokenDetailsResponse.Value);
+
+            return Response<JwtTokenOutputDTO>.Success(mappedJwtTokenToJwtTokenOutputDTO);
+        }
+
+        public async Task<Response<TokensOutputDTO>> GetDirectTokensAsync(string userId)
+        {
+            //get user from database.
+            Response<User> foundUserResponse = await _authRepo.FindUserAsync(userId);
+
+            //check response.
+            if(!foundUserResponse.IsSuccessfull)
+            {
+                return Response<TokensOutputDTO>.Failure(foundUserResponse.ErrorMessage);
+            }
+
+            //generate new tokens and save in database.
+            Response<TokensOutputDTO> newTokenResponse = await CreateAndSaveTokenAsync(foundUserResponse.Value);
+
+            if(!newTokenResponse.IsSuccessfull)
+            {
+                return Response<TokensOutputDTO>.Failure(newTokenResponse.ErrorMessage);
+            }
+
+            return Response<TokensOutputDTO>.Success(newTokenResponse.Value);
         }
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
 {
-    public class UpdateUserInputModelDTO: IIdentityModel
+    public class UpdateUserInputDTO: IIdentityModel
     {
         public string? Id { get; set; }
         [Required]
@@ -13,11 +13,7 @@ namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
         public string? LastName { get; set; }
         [Required]
         public string? UserName { get; set; }
-        [Required]
-        public string? Password { get; set; }
-        [Required]
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        public string? Role { get; set; }
     }
 }

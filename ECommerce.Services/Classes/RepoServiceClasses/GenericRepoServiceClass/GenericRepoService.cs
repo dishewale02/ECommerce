@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Models.DataModels.InfoModel;
-using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
+using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;

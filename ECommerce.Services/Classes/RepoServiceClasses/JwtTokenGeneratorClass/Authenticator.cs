@@ -18,12 +18,12 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass
             _refreshTokenGenerator = refreshTokenGenerator;
         }
 
-        public async Task<Response<JwtTokenDTO>> GenerateJwtTokensAsync(User user)
+        public async Task<Response<TokensOutputDTO>> GenerateJwtTokensAsync(User user)
         {
             //check if input user is null.
             if(user is null)
             {
-                return Response<JwtTokenDTO>.Failure("null user.");
+                return Response<TokensOutputDTO>.Failure("null user.");
             }
 
             //generate access token.
@@ -31,7 +31,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass
 
             if(!accessTokenGeneratorResponse.IsSuccessfull)
             {
-                return Response<JwtTokenDTO>.Failure(accessTokenGeneratorResponse.ErrorMessage);
+                return Response<TokensOutputDTO>.Failure(accessTokenGeneratorResponse.ErrorMessage);
             }
 
             //generate refresh token.
@@ -39,16 +39,16 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass
 
             if(!refreshTokenGeneratorResponse.IsSuccessfull)
             {
-                return Response<JwtTokenDTO>.Failure(refreshTokenGeneratorResponse.ErrorMessage);
+                return Response<TokensOutputDTO>.Failure(refreshTokenGeneratorResponse.ErrorMessage);
             }
 
             //create new JwtToken instance and save above tokens into it.
-            JwtTokenDTO jwtTokenDTO = new JwtTokenDTO();
+            TokensOutputDTO jwtTokenDTO = new TokensOutputDTO();
 
             jwtTokenDTO.AccessToken = accessTokenGeneratorResponse.Value;
             jwtTokenDTO.RefreshToken = refreshTokenGeneratorResponse.Value;
 
-            return Response<JwtTokenDTO>.Success(jwtTokenDTO);
+            return Response<TokensOutputDTO>.Success(jwtTokenDTO);
         }
     }
 }

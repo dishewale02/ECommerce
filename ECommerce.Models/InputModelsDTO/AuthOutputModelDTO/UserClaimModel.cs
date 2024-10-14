@@ -1,9 +1,8 @@
-﻿
-using ECommerce.Models.DataModels.InfoModel;
+﻿using ECommerce.Models.DataModels.InfoModel;
 
-namespace ECommerce.Models.InputModelsDTO.AuthInputModelsDTO
+namespace ECommerce.Models.InputModelsDTO.AuthOutputModelDTO
 {
-    public class UserClaimModel: IIdentityModel
+    public class UserClaimModel : IIdentityModel
     {
         public string? Id { get; set; }
         public string? Name { get; set; }
