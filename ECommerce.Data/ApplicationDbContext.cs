@@ -1,5 +1,6 @@
 ﻿
 using ECommerce.Models.DataModels.AuthDataModels;
+using ECommerce.Models.DataModels.ProductModel;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Data
@@ -12,6 +13,8 @@ namespace ECommerce.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public virtual DbSet<JwtToken> JwtTokens { get; set; }
+        public DbSet<JwtToken> JwtTokens { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Category> Categories { get; set; }
     }
 }

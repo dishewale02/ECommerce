@@ -32,5 +32,15 @@ namespace ECommerce.Models.ResponseModel
                 Value = default(T)
             };
         }
+
+        public static Response<bool> Success(bool successfull)
+        {
+            return new Response<bool>()
+            {
+                Value = successfull,
+                IsSuccessfull = successfull,
+                ErrorMessage= null
+            };
+        }
     }
 }

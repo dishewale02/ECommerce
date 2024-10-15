@@ -8,9 +8,9 @@ namespace ECommerce.Models.DataModels.AuthDataModels
     {
         [Key]
         public string Id { get; set; }
-        public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public string UserId { get; set; }
         public User User { get; set; }
+        public DateTime RefreshTokenValidityTill { get; set; }
     }
 }

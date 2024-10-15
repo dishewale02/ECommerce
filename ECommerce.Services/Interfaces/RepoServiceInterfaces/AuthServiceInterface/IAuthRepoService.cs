@@ -7,9 +7,13 @@ namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterfa
 {
     public interface IAuthRepoService
     {
-        Task<Response<RegisterInputDTO>> RegisterUserAsync(RegisterInputDTO RegisterInputModel);
-        Task<Response<JwtTokenDTO>> LoginUserAsync(LoginInpulDTO LoginInputModel);
-        Task<Response<User>> FindByUserNameAsync(string? userName);
-        Task<Response<User>> FindByEmailAsync(string? email);
+        Task<Response<UserInputDTO>> RegisterUserAsync(UserInputDTO RegisterInputModel);
+        Task<Response<TokensOutputDTO>> LoginUserAsync(LoginInpulDTO LoginInputModel);
+        Task<Response<UpdateUserInputDTO>> UpdateUserAsync(UpdateUserInputDTO updateUserInputModelDTO, UserClaimModel userClaimModel);
+        Task<Response<bool>> ResetPasswordAsync(ResetPasswordInputDTO model);
+        Task<Response<string>> ForgotPasswordAsync(ForgotPasswordModel model);
+        Task<Response<bool>> CheckForgotPasswordTokenAsync(CheckForgotPasswordTokenModel model);
+        Task<Response<JwtTokenOutputDTO>> GetTokenDetailsAsync(string refreshToken);
+        Task<Response<TokensOutputDTO>> GetDirectTokensAsync(string userId);
     }
 }

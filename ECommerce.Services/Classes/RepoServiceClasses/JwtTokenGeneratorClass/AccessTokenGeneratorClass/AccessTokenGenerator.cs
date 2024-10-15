@@ -20,12 +20,18 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.A
 
         public async Task<Response<string>> GetAccessTokenAsync(User user)
         {
+            //check if user is null.
+            if(user is null || user.Id is null || user.Email is null || user.UserName is null || user.Role is null)
+            {
+                return Response<string>.Failure("can not create token.");
+            }
+
             List<Claim> claims = new List<Claim>()
             {
                 new Claim("id", user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Surname, user.LastName)
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             Response<string> token = await _tokenWriter.GenerateTokenAsync(

@@ -1,19 +1,9 @@
 using ECommerce.Data;
 using ECommerce.Models.DataModels;
 using ECommerce.Models.InputModelsDTO.EmailSenderDTO;
-using ECommerce.Repo.Classes.AuthRepoClasses;
-using ECommerce.Repo.Interfaces.AuthRepoInterface;
-using ECommerce.Services.Classes.AutoMapperService;
-using ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass;
+using ECommerce.Services;
 using ECommerce.Services.Classes.RepoServiceClasses.EmailServiceClass;
-using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass;
-using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.AccessTokenGeneratorClass;
-using ECommerce.Services.Classes.RepoServiceClasses.JwtTokenGeneratorClass.RefreshTokenGeneratorClass;
-using ECommerce.Services.Classes.RepoServiceClasses.PasswordHasherServiceClass;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.EmailServiceInterface;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.JwtTokenGeneratorInterface;
-using ECommerce.Services.Interfaces.RepoServiceInterfaces.PasswordHasherServiceInterface;
+using ECommerce.Services.Interfaces.OtherServicesInterfaces.EmailServiceInterface;
 using ECommerce.WebAPI.ApplicationConstant;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -31,14 +21,7 @@ var connectionString = builder.Configuration.GetConnectionString(ApplicationCons
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseSqlServer(connectionString));
 
-//Add other Dependency Injection Services.
-builder.Services.AddScoped<IAuthRepoService, AuthRepoService>();
-builder.Services.AddScoped<IAuthRepo, AuthRepo>();
-builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
-builder.Services.AddScoped<IAuthenticator, Authenticator>();
-builder.Services.AddScoped<AccessTokenGenerator>();
-builder.Services.AddScoped<RefreshTokenGenerator>();
-builder.Services.AddScoped<TokenWriter>();
+builder.Services.AddCommonServices();
 
 //configure email settings.
 var emailConfig = builder.Configuration.GetSection(ApplicationConstants.AUTH_EMAIL_SETTINGS).Get<EmailSettings>();
@@ -78,9 +61,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
         });
 
-//configure auto mapper.
-builder.Services.AddAutoMapper(typeof(AutoMapperService));
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -98,6 +78,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
