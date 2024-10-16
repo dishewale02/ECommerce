@@ -1,8 +1,10 @@
 ﻿using ECommerce.Models.DataModels.AuthDataModels;
+using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
+using ECommerce.Models.ModelDTOs.CategoryInputModelDTO;
+using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
-using ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,23 +14,20 @@ namespace ECommerce.WebAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
+    public class CategoryController : ControllerBase
     {
-        private readonly AdminRepoService _adminService;
-        private readonly IGenericRepoService<UserInputDTO, User> _genericRepoService;
+        private readonly IGenericRepoService<CategoryInputDTO, Category> _genericRepoService;
 
-        public AdminController(AdminRepoService adminService, IGenericRepoService<UserInputDTO, User> genericRepoService)
+        public CategoryController(IGenericRepoService<CategoryInputDTO, Category> createProdcutService)
         {
-            _adminService = adminService;
-            _genericRepoService = genericRepoService;
+            _genericRepoService = createProdcutService;
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("create-user")]
-        public async Task<IActionResult> CreateUser([FromBody] UserInputDTO userInputDTO)
+        [Route("create-new-category")]
+        public async Task<IActionResult> CreateNewCategory(CategoryInputDTO categoryInputDTO)
         {
-            //check if input model is valid or not.
+            //check model state.
             if (!ModelState.IsValid)
             {
                 return Ok("input is not valid");
@@ -37,27 +36,11 @@ namespace ECommerce.WebAPI.Controllers
             {
                 try
                 {
-                    if(!User.Identity.IsAuthenticated)
-                    {
-                        return Ok("user is not authenticated.");
-                    }
+                    //get user claims.
+                    UserClaimModel loggedInUserClaims = await GetUserClaims();
 
-                    string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                    string? email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                    string? userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-                    string? role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-                    //create new UserClaimModel
-                    UserClaimModel userClaimModel = new UserClaimModel()
-                    {
-                        Id = id,
-                        Email = email,
-                        UserName = userName,
-                        Role = role
-                    };
-                    
                     //send Create User Request to service layer.
-                    Response<UserInputDTO> createUserServiceResponse = await _adminService.CreateAsync(userInputDTO, userClaimModel);
+                    Response<CategoryInputDTO> createUserServiceResponse = await _genericRepoService.CreateAsync(categoryInputDTO, loggedInUserClaims);
 
                     //check if response has error.
                     if (!createUserServiceResponse.IsSuccessfull)
@@ -71,15 +54,15 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                    return Ok(Response<CategoryInputDTO>.Failure(ex.Message));
                 }
             }
+            
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("update-user")]
-        public async Task<IActionResult> UpdateUser([FromBody] UserInputDTO updateUserInputModelDTO)
+        [Route("update-category")]
+        public async Task<IActionResult> UpdateCategory(CategoryInputDTO updateCategoryDetails)
         {
             //check if input model is valid or not.
             if (!ModelState.IsValid)
@@ -99,7 +82,7 @@ namespace ECommerce.WebAPI.Controllers
                     UserClaimModel loggedInUserClaims = await GetUserClaims();
 
                     //send Create User Request to service layer.
-                    Response<UserInputDTO> updateUserServiceResponse = await _adminService.UpdateAsync(updateUserInputModelDTO, loggedInUserClaims);
+                    Response<CategoryInputDTO> updateUserServiceResponse = await _genericRepoService.UpdateAsync(updateCategoryDetails, loggedInUserClaims);
 
                     //check if response has error.
                     if (!updateUserServiceResponse.IsSuccessfull)
@@ -113,26 +96,25 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                    return StatusCode(200, new Response<CategoryInputDTO>() { ErrorMessage = ex.Message });
                 }
             }
         }
 
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
-        [Route("get-user")]
-        public async Task<IActionResult> GetUser(string? userId)
+        [Route("get-category")]
+        public async Task<IActionResult> GetCategory(string categoryId)
         {
             try
             {
                 //check if input id is null.
-                if(string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(categoryId))
                 {
                     return Ok("input id is null.");
                 }
 
                 //send request to the service layer.
-                Response<UserInputDTO> foundUserDetailResponse = await _genericRepoService.GetAsync(userId);
+                Response<CategoryInputDTO> foundUserDetailResponse = await _genericRepoService.GetAsync(categoryId);
 
                 //check response.
                 if (!foundUserDetailResponse.IsSuccessfull)
@@ -144,19 +126,18 @@ namespace ECommerce.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<CategoryInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
-        [Route("get-all-user")]
-        public async Task<IActionResult> GetAllUsers()
+        [Route("get-all-categories")]
+        public async Task<IActionResult> GetAllCategory()
         {
             try
             {
                 //send request to the service layer.
-                Response<IEnumerable<UserInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
+                Response<IEnumerable<CategoryInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
 
                 //check response.
                 if (!getAllUsersResponse.IsSuccessfull)
@@ -164,29 +145,31 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(getAllUsersResponse);
                 }
 
-                return Ok(getAllUsersResponse.Value);
+                return Ok(getAllUsersResponse);
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<CategoryInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("delete-user")]
-        public async Task<IActionResult> DeleteUser(string? userId)
+        [Route("soft-delete-category")]
+        public async Task<IActionResult> SoftDeleteCategory(string? categoryId)
         {
             try
             {
                 //check if input id is null.
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(categoryId))
                 {
                     return Ok("input id is null.");
                 }
 
+                //get user claims.
+                UserClaimModel loggedInUserClaims = await GetUserClaims();
+
                 //send request to the service layer.
-                Response<UserInputDTO> foundUserDeleteResponse = await _genericRepoService.DeleteAsync(userId);
+                Response<CategoryInputDTO> foundUserDeleteResponse = await _genericRepoService.SoftDeleteAsync(categoryId, loggedInUserClaims);
 
                 //check response.
                 if (!foundUserDeleteResponse.IsSuccessfull)
@@ -198,7 +181,7 @@ namespace ECommerce.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<CategoryInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
@@ -220,7 +203,6 @@ namespace ECommerce.WebAPI.Controllers
 
             return userClaimModel;
         }
-
 
     }
 }

@@ -8,9 +8,9 @@ using ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoServiceInte
 
 namespace ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass
 {
-    public class ProductRepoService : GenericRepoService<ProductInputDTO, Product>, IProductRepoService
+    public class CategoryRepoService : GenericRepoService<ProductInputDTO, Product>, ICategoryRepoService
     {
-        public ProductRepoService(IGenericRepo<Product> genericRepo, IMapper mapper) : base(genericRepo, mapper)
+        public CategoryRepoService(IGenericRepo<Product> genericRepo, IMapper mapper) : base(genericRepo, mapper)
         {
        
         }

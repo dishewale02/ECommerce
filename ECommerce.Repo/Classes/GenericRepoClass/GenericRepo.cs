@@ -79,15 +79,23 @@ namespace ECommerce.Repo.Classes.GenericRepoClass
 
         public async Task<Response<IEnumerable<T>>> RGetAllAsync()
         {
-            //find all the entity from database.
-            IEnumerable<T> values = await _dbSet.ToListAsync();
-
-            if (values == null)
+            try
             {
-                return Response<IEnumerable<T>>.Failure("no entry found.");
-            }
+                // Find all the entities that are not deleted from the database.
+                var values = await _dbSet.Where(x => x.IsDeleted == false && x.IsActive == true).AsNoTracking().ToListAsync();
 
-            return Response<IEnumerable<T>>.Success(values);
+                // Check if no entries were found.
+                if (values == null || values.Count() == 0)
+                {
+                    return Response<IEnumerable<T>>.Failure("No entries found.");
+                }
+
+                return Response<IEnumerable<T>>.Success(values);
+            }
+            catch (Exception ex)
+            {
+                return Response<IEnumerable<T>>.Failure(ex.Message);
+            }
         }
 
         public async Task<Response<T>> RGetAsync(string id)

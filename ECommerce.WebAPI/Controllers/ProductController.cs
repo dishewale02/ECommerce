@@ -1,10 +1,8 @@
-﻿using ECommerce.Models.DataModels.AuthDataModels;
-using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
+﻿using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
+using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
-using ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,23 +10,20 @@ namespace ECommerce.WebAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
+    public class ProductController : ControllerBase
     {
-        private readonly AdminRepoService _adminService;
-        private readonly IGenericRepoService<UserInputDTO, User> _genericRepoService;
+        private readonly IGenericRepoService<ProductInputDTO, Product> _genericRepoService;
 
-        public AdminController(AdminRepoService adminService, IGenericRepoService<UserInputDTO, User> genericRepoService)
+        public ProductController(IGenericRepoService<ProductInputDTO, Product> createProdcutService)
         {
-            _adminService = adminService;
-            _genericRepoService = genericRepoService;
+            _genericRepoService = createProdcutService;
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("create-user")]
-        public async Task<IActionResult> CreateUser([FromBody] UserInputDTO userInputDTO)
+        [Route("create-new-product")]
+        public async Task<IActionResult> CreateNewProduct(ProductInputDTO productInputDTO)
         {
-            //check if input model is valid or not.
+            //check model state.
             if (!ModelState.IsValid)
             {
                 return Ok("input is not valid");
@@ -37,27 +32,16 @@ namespace ECommerce.WebAPI.Controllers
             {
                 try
                 {
-                    if(!User.Identity.IsAuthenticated)
+                    if (!User.Identity.IsAuthenticated)
                     {
                         return Ok("user is not authenticated.");
                     }
 
-                    string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                    string? email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                    string? userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-                    string? role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                    //get user claims.
+                    UserClaimModel loggedInUserClaims = await GetUserClaims();
 
-                    //create new UserClaimModel
-                    UserClaimModel userClaimModel = new UserClaimModel()
-                    {
-                        Id = id,
-                        Email = email,
-                        UserName = userName,
-                        Role = role
-                    };
-                    
                     //send Create User Request to service layer.
-                    Response<UserInputDTO> createUserServiceResponse = await _adminService.CreateAsync(userInputDTO, userClaimModel);
+                    Response<ProductInputDTO> createUserServiceResponse = await _genericRepoService.CreateAsync(productInputDTO, loggedInUserClaims);
 
                     //check if response has error.
                     if (!createUserServiceResponse.IsSuccessfull)
@@ -71,15 +55,15 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                    return Ok(Response<ProductInputDTO>.Failure(ex.Message));
                 }
             }
+            
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("update-user")]
-        public async Task<IActionResult> UpdateUser([FromBody] UserInputDTO updateUserInputModelDTO)
+        [Route("update-product")]
+        public async Task<IActionResult> UpdateProduct(ProductInputDTO updateProductDetails)
         {
             //check if input model is valid or not.
             if (!ModelState.IsValid)
@@ -99,7 +83,7 @@ namespace ECommerce.WebAPI.Controllers
                     UserClaimModel loggedInUserClaims = await GetUserClaims();
 
                     //send Create User Request to service layer.
-                    Response<UserInputDTO> updateUserServiceResponse = await _adminService.UpdateAsync(updateUserInputModelDTO, loggedInUserClaims);
+                    Response<ProductInputDTO> updateUserServiceResponse = await _genericRepoService.UpdateAsync(updateProductDetails, loggedInUserClaims);
 
                     //check if response has error.
                     if (!updateUserServiceResponse.IsSuccessfull)
@@ -113,26 +97,25 @@ namespace ECommerce.WebAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                    return StatusCode(200, new Response<ProductInputDTO>() { ErrorMessage = ex.Message });
                 }
             }
         }
 
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
-        [Route("get-user")]
-        public async Task<IActionResult> GetUser(string? userId)
+        [Route("get-Product")]
+        public async Task<IActionResult> GetProduct(string productId)
         {
             try
             {
                 //check if input id is null.
-                if(string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(productId))
                 {
                     return Ok("input id is null.");
                 }
 
                 //send request to the service layer.
-                Response<UserInputDTO> foundUserDetailResponse = await _genericRepoService.GetAsync(userId);
+                Response<ProductInputDTO> foundUserDetailResponse = await _genericRepoService.GetAsync(productId);
 
                 //check response.
                 if (!foundUserDetailResponse.IsSuccessfull)
@@ -144,19 +127,18 @@ namespace ECommerce.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<ProductInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
-        [Route("get-all-user")]
-        public async Task<IActionResult> GetAllUsers()
+        [Route("get-all-products")]
+        public async Task<IActionResult> GetAllProducts()
         {
             try
             {
                 //send request to the service layer.
-                Response<IEnumerable<UserInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
+                Response<IEnumerable<ProductInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
 
                 //check response.
                 if (!getAllUsersResponse.IsSuccessfull)
@@ -168,25 +150,27 @@ namespace ECommerce.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<ProductInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
-        [Route("delete-user")]
-        public async Task<IActionResult> DeleteUser(string? userId)
+        [Route("soft-delete-product")]
+        public async Task<IActionResult> SoftDeleteProduct(string? productId)
         {
             try
             {
                 //check if input id is null.
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(productId))
                 {
                     return Ok("input id is null.");
                 }
 
+                //get user claims.
+                UserClaimModel loggedInUserClaims = await GetUserClaims();
+
                 //send request to the service layer.
-                Response<UserInputDTO> foundUserDeleteResponse = await _genericRepoService.DeleteAsync(userId);
+                Response<ProductInputDTO> foundUserDeleteResponse = await _genericRepoService.SoftDeleteAsync(productId, loggedInUserClaims);
 
                 //check response.
                 if (!foundUserDeleteResponse.IsSuccessfull)
@@ -198,7 +182,7 @@ namespace ECommerce.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+                return StatusCode(200, new Response<ProductInputDTO>() { ErrorMessage = ex.Message });
             }
         }
 
@@ -220,7 +204,6 @@ namespace ECommerce.WebAPI.Controllers
 
             return userClaimModel;
         }
-
 
     }
 }

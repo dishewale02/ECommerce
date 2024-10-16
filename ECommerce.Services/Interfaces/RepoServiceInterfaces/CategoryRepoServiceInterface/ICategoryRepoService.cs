@@ -5,7 +5,7 @@ using ECommerce.Models.ResponseModel;
 
 namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoServiceInterface
 {
-    public interface IProductRepoService
+    public interface ICategoryRepoService
     {
 
     }

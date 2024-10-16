@@ -12,9 +12,9 @@ namespace ECommerce.Data
 
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<JwtToken> JwtTokens { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Category> Categories { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<JwtToken> JwtTokens { get; set; }
+        public virtual DbSet<Product> Products { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
     }
 }

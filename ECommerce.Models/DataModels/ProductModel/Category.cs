@@ -8,6 +8,6 @@ namespace ECommerce.Models.DataModels.ProductModel
         [Required]
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public List<Product>? Products { get; set; }
+        public virtual List<Product>? Products { get; set; } = new List<Product>();
     }
 }
