@@ -164,7 +164,7 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(getAllUsersResponse);
                 }
 
-                return Ok(getAllUsersResponse.Value);
+                return Ok(getAllUsersResponse);
             }
             catch (Exception ex)
             {

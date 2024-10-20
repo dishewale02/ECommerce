@@ -16,6 +16,10 @@ using ECommerce.Repo.Interfaces.GenericRepoInterface;
 using ECommerce.Repo.Classes.GenericRepoClass;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoServiceInterface;
 using ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass;
+using ECommerce.Repo.Interfaces.ProductRepoInterface;
+using ECommerce.Repo.Classes.ProductRepoClass;
+using ECommerce.Repo.Interfaces.CategoryRepoInterface;
+using ECommerce.Repo.Classes.CategoryRepo;
 
 namespace ECommerce.Services
 {
@@ -35,6 +39,8 @@ namespace ECommerce.Services
             services.AddScoped<AdminRepoService>();
             services.AddScoped<IProductRepoService, ProductRepoService>();
             services.AddScoped<ICategoryRepoService, CategoryRepoService>();
+            services.AddScoped<IProductRepo, ProductRepo>();
+            services.AddScoped<ICategoryRepo, CategoryRepo>();
 
 
             // Register generic repository and service

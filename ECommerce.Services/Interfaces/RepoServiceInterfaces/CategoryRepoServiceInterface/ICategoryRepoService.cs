@@ -1,5 +1,6 @@
 ﻿
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
+using ECommerce.Models.ModelDTOs.CategoryInputModelDTO;
 using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
 
@@ -7,6 +8,5 @@ namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoService
 {
     public interface ICategoryRepoService
     {
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿
 using ECommerce.Models.DataModels.InfoModel;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.ModelDTOs.ProductInputModelDTO
@@ -8,10 +9,12 @@ namespace ECommerce.Models.ModelDTOs.ProductInputModelDTO
     {
         public string? Id { get; set; }
         [Required]
-        public string? ProductName { get; set; }
+        public string? Name { get; set; }
         [Required]
-        public decimal? ProductPrice { get; set; }
-        public string? ProductDescription { get; set; }
-        public string? ProductCategory { get; set; }
+        public decimal? Price { get; set; }
+        public string? Description { get; set; }
+        public List<IFormFile?>? Images { get; set; }
+        public string? ImagePaths { get; set; }
+        public string? CategoryId { get; set; }
     }
 }
