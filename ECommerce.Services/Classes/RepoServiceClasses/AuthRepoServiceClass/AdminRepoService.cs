@@ -81,7 +81,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
                 convertToUser.PasswordHash = passwordHashResponse.Value;
                 convertToUser.IsDeleted = false;
                 convertToUser.IsActive = true;
-                convertToUser.Role = "USER";
+                convertToUser.Role = userInputDTO.Role;
 
                 //send entity to save in database.
                 Response<User> saveUserInDatabaseResponse = await _genericRepo.RCreateAsync(convertToUser);

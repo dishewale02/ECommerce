@@ -25,7 +25,6 @@ namespace ECommerce.WebAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "ADMIN")]
-        [Route("create-user")]
         public async Task<IActionResult> CreateUser([FromBody] UserInputDTO userInputDTO)
         {
             //check if input model is valid or not.
@@ -76,9 +75,8 @@ namespace ECommerce.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPut]
         [Authorize(Roles = "ADMIN")]
-        [Route("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UserInputDTO updateUserInputModelDTO)
         {
             //check if input model is valid or not.
@@ -108,7 +106,7 @@ namespace ECommerce.WebAPI.Controllers
                     }
                     else
                     {
-                        return Ok(updateUserServiceResponse.Value);
+                        return Ok(updateUserServiceResponse);
                     }
                 }
                 catch (Exception ex)
@@ -118,10 +116,9 @@ namespace ECommerce.WebAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("${userId}")]
         [Authorize(Roles = "ADMIN")]
-        [Route("get-user")]
-        public async Task<IActionResult> GetUser(string? userId)
+        public async Task<IActionResult> GetUser(string userId)
         {
             try
             {
@@ -150,7 +147,6 @@ namespace ECommerce.WebAPI.Controllers
 
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
-        [Route("get-all-user")]
         public async Task<IActionResult> GetAllUsers()
         {
             try
@@ -172,9 +168,8 @@ namespace ECommerce.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpDelete("{userId}")]
         [Authorize(Roles = "ADMIN")]
-        [Route("delete-user")]
         public async Task<IActionResult> DeleteUser(string? userId)
         {
             try
@@ -194,7 +189,7 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(foundUserDeleteResponse);
                 }
 
-                return Ok(foundUserDeleteResponse.Value);
+                return Ok(foundUserDeleteResponse);
             }
             catch (Exception ex)
             {

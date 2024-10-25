@@ -122,7 +122,7 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(foundUserDetailResponse);
                 }
 
-                return Ok(foundUserDetailResponse.Value);
+                return Ok(foundUserDetailResponse);
             }
             catch (Exception ex)
             {
