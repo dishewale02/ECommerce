@@ -39,6 +39,8 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
                 tSourceToTTargetMapped.CreatedBy = userClaimModel.UserName;
                 tSourceToTTargetMapped.IsDeleted = false;
                 tSourceToTTargetMapped.IsActive = true;
+                tSourceToTTargetMapped.ModifiedOn = null;
+                tSourceToTTargetMapped.ModifiedBy = null;
 
                 //send entity to save in database.
                 Response<TTarget> saveEntityInDatabaseResponse = await _genericRepo.RCreateAsync(tSourceToTTargetMapped);
@@ -72,7 +74,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
                 }
 
                 //send request to delete entity.
-                Response<TTarget> deleteEntitytResponse = await _genericRepo.RDeleteAsync(id);
+                Response<TTarget> deleteEntitytResponse = await _genericRepo.RSoftDeleteAsync(id);
 
                 //check Response to return
                 if (!deleteEntitytResponse.IsSuccessfull)
@@ -96,7 +98,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
             }
         }
 
-        public virtual async Task<Response<IEnumerable<TSource>>> GetAllAsync()
+        public virtual async Task<Response<List<TSource>>> GetAllAsync()
         {
             try
             {
@@ -116,14 +118,14 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
 
                 if (result is null)
                 {
-                    return Response<IEnumerable<TSource>>.Failure(getAllModelResponse.ErrorMessage);
+                    return Response<List<TSource>>.Failure(getAllModelResponse.ErrorMessage);
                 }
 
-                return Response<IEnumerable<TSource>>.Success(result);
+                return Response<List<TSource>>.Success(result);
             }
             catch(Exception ex)
             {
-                return Response<IEnumerable<TSource>>.Failure(ex.Message);
+                return Response<List<TSource>>.Failure(ex.Message);
             }
         }
         
@@ -162,7 +164,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
             }
         }
 
-        public virtual async Task<Response<TSource>> UpdateAsync(TSource entity)
+        public virtual async Task<Response<TSource>> UpdateAsync(TSource entity, UserClaimModel userClaimModel)
         {
             try
             {
@@ -174,6 +176,9 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
 
                 //mapp input entity.
                 TTarget tSourceToTTargetMapped = _mapper.Map<TSource, TTarget>(entity);
+
+                tSourceToTTargetMapped.ModifiedBy = userClaimModel.UserName;
+                tSourceToTTargetMapped.ModifiedOn = DateTime.UtcNow;
 
                 //send request to RepoClass for update.
                 Response<TTarget> updateEntityResponse = await _genericRepo.RUpdateAsync(tSourceToTTargetMapped);
@@ -199,5 +204,6 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass
                 return Response<TSource>.Failure(ex.Message);
             }
         }
+
     }
 }

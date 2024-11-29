@@ -45,7 +45,7 @@ namespace ECommerce.Repo.Classes.GenericRepoClass
             return Response<T>.Success(response);
         }
 
-        public async Task<Response<T>> RDeleteAsync(string? id)
+        public async Task<Response<T>> RSoftDeleteAsync(string? id)
         {
             if(id == null)
             {
@@ -60,10 +60,15 @@ namespace ECommerce.Repo.Classes.GenericRepoClass
                 return Response<T>.Failure("not found in database to delete.");
             }
 
-            EntityEntry<T> deleteEntityResponse = _dbSet.Remove(findEntityInDatabaseResponse);
+            //EntityEntry<T> deleteEntityResponse = _dbSet.Remove(findEntityInDatabaseResponse);
+
+            findEntityInDatabaseResponse.IsDeleted = true;
+            findEntityInDatabaseResponse.IsActive = false;
+
+            Response<T> updateDeletedEntityInDatabaseREsponse = await RUpdateAsync(findEntityInDatabaseResponse);
 
             //get entity from response.
-            T response = deleteEntityResponse.Entity;
+            T response = updateDeletedEntityInDatabaseREsponse.Value;
 
             //check if response is null.
             if(response == null)
@@ -111,23 +116,24 @@ namespace ECommerce.Repo.Classes.GenericRepoClass
         {
             if (entity == null)
             {
-                return Response<T>.Failure("input entity is null.");
+                return Response<T>.Failure("Input entity is null.");
             }
 
-            //update the user in database.
-            T? updatedEntityInDatabaseResponse = await _dbSet.FindAsync(entity.Id);
+            // Retrieve the existing entity from the database
+            T? existingEntity = await _dbSet.FindAsync(entity.Id);
 
-            if (updatedEntityInDatabaseResponse is null)
+            if (existingEntity is null)
             {
-                return Response<T>.Failure("User not found.");
+                return Response<T>.Failure("Entity not found.");
             }
 
-            updatedEntityInDatabaseResponse = entity;
+            // Update properties of the existing entity with values from the input entity
+            _dbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
 
-            //save the canges.
+            // Save the changes
             await _dbContext.SaveChangesAsync();
 
-            return Response<T>.Success(updatedEntityInDatabaseResponse);
+            return Response<T>.Success(existingEntity);
         }
     }
 }

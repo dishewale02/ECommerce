@@ -1,4 +1,6 @@
 ﻿
+using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
+
 namespace ECommerce.Models.ResponseModel
 {
     public class Response<T>
@@ -41,6 +43,11 @@ namespace ECommerce.Models.ResponseModel
                 IsSuccessfull = successfull,
                 ErrorMessage= null
             };
+        }
+
+        public static implicit operator Response<T>(Response<IEnumerable<ProductDTO>> v)
+        {
+            throw new NotImplementedException();
         }
     }
 }

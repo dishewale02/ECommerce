@@ -11,10 +11,17 @@ using ECommerce.Services.Interfaces.OtherServicesInterfaces.PasswordHasherServic
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 using Microsoft.Extensions.DependencyInjection;
-using ECommerce.Data;
 using ECommerce.Services.Classes.AutoMapperService;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;
 using ECommerce.Repo.Classes.GenericRepoClass;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoServiceInterface;
+using ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass;
+using ECommerce.Repo.Interfaces.ProductRepoInterface;
+using ECommerce.Repo.Classes.ProductRepoClass;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.CategoryRepoServiceInterface;
+using ECommerce.Services.Classes.RepoServiceClasses.CategoryRepoServiceClass;
+using ECommerce.Repo.Interfaces.CategoryRepoInterface;
+using ECommerce.Repo.Classes.CategoryRepoClass;
 
 namespace ECommerce.Services
 {
@@ -32,6 +39,10 @@ namespace ECommerce.Services
             services.AddScoped<TokenWriter>();
             services.AddScoped<Validator>();
             services.AddScoped<AdminRepoService>();
+            services.AddScoped<IProductRepoService, ProductRepoService>();
+            services.AddScoped<ICategoryRepoService, CategoryRepoService>();
+            services.AddScoped<IProductRepo, ProductRepo>();
+            services.AddScoped<ICategoryRepo, CategoryRepo>();
 
             // Register generic repository and service
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));

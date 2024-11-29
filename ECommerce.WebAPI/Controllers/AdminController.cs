@@ -157,7 +157,7 @@ namespace ECommerce.WebAPI.Controllers
             try
             {
                 //send request to the service layer.
-                Response<IEnumerable<UserInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
+                Response<List<UserInputDTO>> getAllUsersResponse = await _genericRepoService.GetAllAsync();
 
                 //check response.
                 if (!getAllUsersResponse.IsSuccessfull)
