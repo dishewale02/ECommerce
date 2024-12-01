@@ -1,6 +1,5 @@
 ﻿using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ModelDTOs.CategoryModelDTO;
-using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.CategoryRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;

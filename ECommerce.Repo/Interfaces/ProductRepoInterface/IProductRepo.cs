@@ -8,5 +8,6 @@ namespace ECommerce.Repo.Interfaces.ProductRepoInterface
     {
         Task<Response<List<Product>>> RSearchProductAsync(string searchString);
         Task<Response<List<Product>>> RSearchProductsByCategoryIdAsync(string categoryId);
+        Task<Response<List<Product>>> RGetDeletedAndNonActiveProducts();
     }
 }

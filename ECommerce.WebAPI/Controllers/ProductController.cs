@@ -24,12 +24,35 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<IActionResult> GetNonDeletedAndActiveProducts()
         {
             try
             {
                 //send the request to service layer.
                 Response<List<ProductDTO>> getAllProductsRequestResponse = await _productRepoService.GetAllAsync();
+
+                //check response
+                if (!getAllProductsRequestResponse.IsSuccessfull)
+                {
+                    return Ok(Response<string>.Failure(getAllProductsRequestResponse.ErrorMessage));
+                }
+
+                return Ok(getAllProductsRequestResponse);
+            }
+            catch (Exception ex)
+            {
+                return Ok(Response<string>.Failure(ex.Message));
+            }
+        }
+
+        [HttpGet]
+        [Route("get-deleted-and-non-active-products")]
+        public async Task<IActionResult> GetDeletedAndNonActiveProducts()
+        {
+            try
+            {
+                //send the request to service layer.
+                Response<List<ProductDTO>> getAllProductsRequestResponse = await _productRepoService.GetDeletedAndNonActiveProducts();
 
                 //check response
                 if (!getAllProductsRequestResponse.IsSuccessfull)
@@ -74,7 +97,8 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProductById(string id)
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> DeleteProductById([FromQuery]string id)
         {
             try
             {
@@ -90,7 +114,37 @@ namespace ECommerce.WebAPI.Controllers
                 //check response
                 if (!getProductRequestResponse.IsSuccessfull)
                 {
-                    return Ok(Response<IEnumerable<ProductDTO>>.Failure(getProductRequestResponse.ErrorMessage));
+                    return Ok(Response<ProductDTO>.Failure(getProductRequestResponse.ErrorMessage));
+                }
+
+                return Ok(getProductRequestResponse);
+            }
+            catch (Exception ex)
+            {
+                return Ok(Response<string>.Failure(ex.Message));
+            }
+        }
+
+        [HttpDelete]
+        [Route("activate-deleted-product")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> ActivateDeletedProductById([FromQuery] string id)
+        {
+            try
+            {
+                //check if the id is null.
+                if (string.IsNullOrEmpty(id))
+                {
+                    return Ok(Response<string>.Failure("input id can not be null"));
+                }
+
+                //send the request to service layer.
+                Response<ProductDTO> getProductRequestResponse = await _productRepoService.ActivateDeletedProduct(id);
+
+                //check response
+                if (!getProductRequestResponse.IsSuccessfull)
+                {
+                    return Ok(Response<ProductDTO>.Failure(getProductRequestResponse.ErrorMessage));
                 }
 
                 return Ok(getProductRequestResponse);

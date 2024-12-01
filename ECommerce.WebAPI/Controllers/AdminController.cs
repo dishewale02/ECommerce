@@ -1,9 +1,8 @@
 ﻿using ECommerce.Models.DataModels.AuthDataModels;
-using ECommerce.Models.DataModels.InfoModel;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
-using ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +14,10 @@ namespace ECommerce.WebAPI.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly AdminRepoService _adminService;
+        private readonly IAdminRepoService _adminService;
         private readonly IGenericRepoService<UserInputDTO, User> _genericRepoService;
 
-        public AdminController(AdminRepoService adminService, IGenericRepoService<UserInputDTO, User> genericRepoService)
+        public AdminController(IAdminRepoService adminService, IGenericRepoService<UserInputDTO, User> genericRepoService)
         {
             _adminService = adminService;
             _genericRepoService = genericRepoService;
@@ -151,8 +150,8 @@ namespace ECommerce.WebAPI.Controllers
 
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
-        [Route("get-all-user")]
-        public async Task<IActionResult> GetAllUsers()
+        [Route("get-all-nondeleted-active-users")]
+        public async Task<IActionResult> GetAllNonDeletedAndActiveUsers()
         {
             try
             {
@@ -165,7 +164,31 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(getAllUsersResponse);
                 }
 
-                return Ok(getAllUsersResponse.Value);
+                return Ok(getAllUsersResponse);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "ADMIN")]
+        [Route("get-all-deleted-nonactive-users")]
+        public async Task<IActionResult> GetAllDeletedAndNonActiveUsers()
+        {
+            try
+            {
+                //send request to the service layer.
+                Response<List<UserInputDTO>> getAllUsersResponse = await _adminService.GetAllDeletedAndNonActiveUsers();
+
+                //check response.
+                if (!getAllUsersResponse.IsSuccessfull)
+                {
+                    return Ok(getAllUsersResponse);
+                }
+
+                return Ok(getAllUsersResponse);
             }
             catch (Exception ex)
             {
@@ -176,7 +199,7 @@ namespace ECommerce.WebAPI.Controllers
         [HttpPost]
         [Authorize(Roles = "ADMIN")]
         [Route("delete-user")]
-        public async Task<IActionResult> DeleteUser(string? userId)
+        public async Task<IActionResult> DeleteUser([FromQuery] string? userId)
         {
             try
             {
@@ -195,13 +218,44 @@ namespace ECommerce.WebAPI.Controllers
                     return Ok(foundUserDeleteResponse);
                 }
 
-                return Ok(foundUserDeleteResponse.Value);
+                return Ok(foundUserDeleteResponse);
             }
             catch (Exception ex)
             {
                 return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
             }
         }
+
+        [HttpPost]
+        [Authorize(Roles = "ADMIN")]
+        [Route("activate-deleted-user")]
+        public async Task<IActionResult> ActivateDeletedUser([FromQuery] string? userId)
+        {
+            try
+            {
+                //check if input id is null.
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Ok("input id is null.");
+                }
+
+                //send request to the service layer.
+                Response<UserInputDTO> foundUserDeleteResponse = await _adminService.ActivateDeletedUserAsync(userId);
+
+                //check response.
+                if (!foundUserDeleteResponse.IsSuccessfull)
+                {
+                    return Ok(foundUserDeleteResponse);
+                }
+
+                return Ok(foundUserDeleteResponse);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(200, new Response<UserInputDTO>() { ErrorMessage = ex.Message });
+            }
+        }
+
 
         private async Task<UserClaimModel> GetUserClaims()
         {

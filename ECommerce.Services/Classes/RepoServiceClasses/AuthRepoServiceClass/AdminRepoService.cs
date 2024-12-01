@@ -5,21 +5,25 @@ using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Classes.GenericRepoClass;
+using ECommerce.Repo.Interfaces.AdminRepoInterface;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;
 using ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass;
 using ECommerce.Services.Interfaces.OtherServicesInterfaces.PasswordHasherServiceInterface;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
 
 namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 {
-    public class AdminRepoService : GenericRepoService<UserInputDTO, User>
+    public class AdminRepoService : GenericRepoService<UserInputDTO, User>, IAdminRepoService
     {
         protected readonly Validator _validator;
         protected readonly IPasswordHasher _passwordHasher;
+        private readonly IAdminRepo _adminRepo;
 
-        public AdminRepoService(IGenericRepo<User> genericRepo, IMapper mapper, Validator validator, IPasswordHasher passwordHasher) : base(genericRepo, mapper)
+        public AdminRepoService(IGenericRepo<User> genericRepo, IMapper mapper, Validator validator, IPasswordHasher passwordHasher, IAdminRepo adminRepo) : base(genericRepo, mapper)
         {
             _validator = validator;
             _passwordHasher = passwordHasher;
+            _adminRepo = adminRepo;
         }
 
         public override async Task<Response<UserInputDTO>> CreateAsync(UserInputDTO userInputDTO, UserClaimModel userClaimModel)
@@ -198,6 +202,79 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
                 }
 
                 return Response<UserInputDTO>.Success(mappedUserToUserInputDTO);
+            }
+            catch (Exception ex)
+            {
+                return Response<UserInputDTO>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Response<List<UserInputDTO>>> GetAllDeletedAndNonActiveUsers()
+        {
+            try
+            {
+                //send request to data layer.
+                Response<List<User>> deletedAndNonActiveUsersResponse = await _adminRepo.RGetDeletedAndNonActiveUsers();
+
+                //check data layer response
+                if (!deletedAndNonActiveUsersResponse.IsSuccessfull)
+                {
+                    return Response<List<UserInputDTO>>.Failure(deletedAndNonActiveUsersResponse.ErrorMessage);
+                }
+
+                //create new response list.
+                List<UserInputDTO> userResponse = new List<UserInputDTO>();
+
+                //map and save entry in new list.
+                foreach (User user in deletedAndNonActiveUsersResponse.Value)
+                {
+                    UserInputDTO mappedUser = _mapper.Map<UserInputDTO>(user);
+
+                    userResponse.Add(mappedUser);
+                }
+
+                //check response List.
+                if (userResponse.Count == 0)
+                {
+                    return Response<List<UserInputDTO>>.Failure("internal mapping error.");
+                }
+
+                return Response<List<UserInputDTO>>.Success(userResponse);
+            }
+            catch (Exception ex)
+            {
+                return Response<List<UserInputDTO>>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Response<UserInputDTO>> ActivateDeletedUserAsync(string userId)
+        {
+            try
+            {
+                //check if input id is null.
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Response<UserInputDTO>.Failure("input id is null.");
+                }
+
+                //send request to delete entity.
+                Response<User> activateDeletedUserResponse = await _adminRepo.RActivateUserAsync(userId);
+
+                //check Response to return
+                if (!activateDeletedUserResponse.IsSuccessfull)
+                {
+                    return Response<UserInputDTO>.Failure(activateDeletedUserResponse.ErrorMessage);
+                }
+
+                //mapp deleteEntityModel to TTarget model.
+                UserInputDTO TSourceToTTargetMapped = _mapper.Map<User, UserInputDTO>(activateDeletedUserResponse.Value);
+
+                if (TSourceToTTargetMapped == null)
+                {
+                    return Response<UserInputDTO>.Failure("internal mapping error.");
+                }
+
+                return Response<UserInputDTO>.Success(TSourceToTTargetMapped);
             }
             catch (Exception ex)
             {

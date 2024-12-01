@@ -84,26 +84,46 @@ namespace ECommerce.Repo.Classes.GenericRepoClass
 
         public async Task<Response<IEnumerable<T>>> RGetAllAsync()
         {
-            //find all the entity from database.
-            IEnumerable<T> values = await _dbSet.ToListAsync();
-
-            if (values == null)
+            try
             {
-                return Response<IEnumerable<T>>.Failure("no entry found.");
-            }
+                //find all the entity from database.
+                IEnumerable<T> values = await _dbSet.ToListAsync();
 
-            return Response<IEnumerable<T>>.Success(values);
+                List<T> notDeletedAndActiveValues = new List<T>();
+
+                //check response
+                if (values == null)
+                {
+                    return Response<IEnumerable<T>>.Failure("no entry found.");
+                }
+
+                //store all valid values in new list.
+                foreach (T val in values)
+                {
+                    if (!val.IsDeleted && val.IsActive)
+                    {
+                        notDeletedAndActiveValues.Add(val);
+                    }
+                }
+
+                return Response<IEnumerable<T>>.Success(notDeletedAndActiveValues);
+            }
+            catch (Exception ex)
+            {
+                return Response<IEnumerable<T>>.Failure(ex.Message);
+            }
         }
 
-        public async Task<Response<T>> RGetAsync(string id)
+        public async Task<Response<T>> RGetAsync(string? id)
         {
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(id))
             {
                 return Response<T>.Failure("id is null.");
             }
 
             //find entity in database using id.
             T? foundInDatabase = await _dbSet.FindAsync(id);
+
             if (foundInDatabase == null)
             {
                 return Response<T>.Failure("entity not found.");

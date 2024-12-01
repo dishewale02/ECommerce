@@ -1,6 +1,8 @@
 ﻿
 using AutoMapper;
+using ECommerce.Models.DataModels.AuthDataModels;
 using ECommerce.Models.DataModels.ProductModel;
+using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;
@@ -125,6 +127,74 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass
             catch (Exception ex)
             {
                 return Response<List<ProductDTO>>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Response<List<ProductDTO>>> GetDeletedAndNonActiveProducts()
+        {
+            try
+            {
+                //send request to data layer.
+                Response<List<Product>> deletedAndNonActiveProductsResponse = await _productRepo.RGetDeletedAndNonActiveProducts();
+
+                //check Response to return
+                if (!deletedAndNonActiveProductsResponse.IsSuccessfull)
+                {
+                    return Response<List<ProductDTO>>.Failure(deletedAndNonActiveProductsResponse.ErrorMessage);
+                }
+
+                //create new response list.
+                List<ProductDTO> productsResponse = new List<ProductDTO>();
+
+                //map and save entry in new list.
+                foreach (Product product in deletedAndNonActiveProductsResponse.Value)
+                {
+                    ProductDTO mappedProduct = _mapper.Map<ProductDTO>(product);
+
+                    productsResponse.Add(mappedProduct);
+                }
+
+                return Response<List<ProductDTO>>.Success(productsResponse);
+            }
+            catch (Exception ex)
+            {
+                return Response<List<ProductDTO>>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Response<ProductDTO>> ActivateDeletedProduct(string productid)
+        {
+            try
+            {
+                //check if the product available in database.
+                Response<Product> isProductAvailableInDatabaseResponse = await _productRepo.RGetAsync(productid);
+
+                //check response.
+                if (!isProductAvailableInDatabaseResponse.IsSuccessfull)
+                {
+                    return Response<ProductDTO>.Failure(isProductAvailableInDatabaseResponse.ErrorMessage);
+                }
+
+                //update the product state.
+                isProductAvailableInDatabaseResponse.Value.IsActive = true;
+                isProductAvailableInDatabaseResponse.Value.IsDeleted = false;
+
+                //sent product to update in database.
+                Response<Product> updatedProductResponse = await _productRepo.RUpdateAsync(isProductAvailableInDatabaseResponse.Value);
+
+                //check response.
+                if (!updatedProductResponse.IsSuccessfull)
+                {
+                    return Response<ProductDTO>.Failure(updatedProductResponse.ErrorMessage);
+                }
+
+                ProductDTO activattedProduct = _mapper.Map<ProductDTO>(updatedProductResponse.Value);
+
+                return Response<ProductDTO>.Success(activattedProduct);
+            }
+            catch (Exception ex)
+            {
+                return Response<ProductDTO>.Failure(ex.Message);
             }
         }
     }
