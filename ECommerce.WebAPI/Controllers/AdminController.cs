@@ -226,7 +226,7 @@ namespace ECommerce.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpDelete]
         [Authorize(Roles = "ADMIN")]
         [Route("activate-deleted-user")]
         public async Task<IActionResult> ActivateDeletedUser([FromQuery] string? userId)

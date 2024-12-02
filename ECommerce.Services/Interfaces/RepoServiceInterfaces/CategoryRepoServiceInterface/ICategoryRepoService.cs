@@ -9,5 +9,6 @@ namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.CategoryRepoServic
     public interface ICategoryRepoService: IGenericRepoService<CategoryDTO, Category>
     {
         Task<Response<CategoryDTO>> GetByCategoryNameAsync(string categoryName);
+        Task<Response<List<CategoryDTO>>> GetAllCategoriesAsync();
     }
 }
