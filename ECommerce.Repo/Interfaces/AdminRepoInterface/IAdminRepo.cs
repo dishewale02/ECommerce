@@ -1,10 +1,6 @@
 ﻿using ECommerce.Models.DataModels.AuthDataModels;
+using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.ResponseModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ECommerce.Repo.Interfaces.AdminRepoInterface
 {
@@ -12,5 +8,6 @@ namespace ECommerce.Repo.Interfaces.AdminRepoInterface
     {
         Task<Response<User>> RActivateUserAsync(string userId);
         Task<Response<List<User>>> RGetDeletedAndNonActiveUsers();
+        Task<Response<List<Product>>> RGetNonDeletedAndActiveProducts();
     }
 }

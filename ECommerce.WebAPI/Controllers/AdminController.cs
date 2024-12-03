@@ -173,6 +173,29 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpGet]
+        //[Authorize(Roles = "ADMIN")]
+        [Route("export-all-active-users")]
+        public async Task<IActionResult> ExportActiveUsers([FromQuery] string? folderPath = null)
+        {
+            try
+            {
+                // Use a default folder path if none is provided
+                if (string.IsNullOrEmpty(folderPath))
+                {
+                    folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExportedFiles");
+                }
+
+                Response<string> filePathResponse = await _adminService.ExportProductsToExcel(folderPath);
+
+                return Ok(filePathResponse);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred", Error = ex.Message });
+            }
+        }
+
+        [HttpGet]
         [Authorize(Roles = "ADMIN")]
         [Route("get-all-deleted-nonactive-users")]
         public async Task<IActionResult> GetAllDeletedAndNonActiveUsers()

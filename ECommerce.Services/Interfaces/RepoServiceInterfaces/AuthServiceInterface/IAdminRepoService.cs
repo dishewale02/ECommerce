@@ -10,5 +10,6 @@ namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterfa
         Task<Response<UserInputDTO>> UpdateAsync(UserInputDTO updateUserInput, UserClaimModel userClaimModel);
         Task<Response<List<UserInputDTO>>> GetAllDeletedAndNonActiveUsers();
         Task<Response<UserInputDTO>> ActivateDeletedUserAsync(string userId);
+        Task<Response<string>> ExportProductsToExcel(string folderPath);
     }
 }

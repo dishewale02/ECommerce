@@ -1,5 +1,6 @@
 ﻿using ECommerce.Data;
 using ECommerce.Models.DataModels.AuthDataModels;
+using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Repo.Classes.GenericRepoClass;
 using ECommerce.Repo.Interfaces.AdminRepoInterface;
@@ -80,6 +81,15 @@ namespace ECommerce.Repo.Classes.NewFolder
             {
                 return Response<List<User>>.Failure(ex.Message);
             }
+        }
+
+        public async Task<Response<List<Product>>> RGetNonDeletedAndActiveProducts()
+        {
+            //get data from database.
+            List<Product> users = _dbContext.Products.Where(x => !x.IsDeleted && x.IsActive).ToList();
+
+            //send this list to service layer.
+            return Response<List<Product>>.Success(users);
         }
     }
 }

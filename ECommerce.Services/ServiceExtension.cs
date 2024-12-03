@@ -48,6 +48,7 @@ namespace ECommerce.Services
             services.AddScoped<IAdminRepo, AdminRepo>();
             services.AddScoped<IAdminRepoService, AdminRepoService>();
 
+
             // Register generic repository and service
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             services.AddScoped(typeof(IGenericRepoService<,>), typeof(GenericRepoService<,>));

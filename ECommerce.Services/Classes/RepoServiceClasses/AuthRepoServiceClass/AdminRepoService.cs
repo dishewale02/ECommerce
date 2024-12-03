@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using ECommerce.Models.DataModels.AuthDataModels;
-using ECommerce.Models.DataModels.InfoModel;
+using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.InputModelsDTO.AuthInputModelsDTO;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ResponseModel;
-using ECommerce.Repo.Classes.GenericRepoClass;
 using ECommerce.Repo.Interfaces.AdminRepoInterface;
 using ECommerce.Repo.Interfaces.GenericRepoInterface;
 using ECommerce.Services.Classes.RepoServiceClasses.GenericRepoServiceClass;
 using ECommerce.Services.Interfaces.OtherServicesInterfaces.PasswordHasherServiceInterface;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.AuthServiceInterface;
+using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
 {
@@ -280,6 +281,51 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.AuthRepoServiceClass
             {
                 return Response<UserInputDTO>.Failure(ex.Message);
             }
+        }
+
+        public async Task<Response<string>> ExportProductsToExcel(string folderPath)
+        {
+            //get response from data layer.
+            Response<List<Product>> getUsersResponse = await _adminRepo.RGetNonDeletedAndActiveProducts();
+
+            //check the Products list.
+            if(getUsersResponse.IsSuccessfull)
+            {
+                // Ensure the folder exists
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                var products = getUsersResponse.Value.ToList(); // Replace 'Products' with your table name
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Products");
+
+                // Add headers
+                worksheet.Cell(1, 1).Value = "Id";
+                worksheet.Cell(1, 2).Value = "Name";
+                worksheet.Cell(1, 3).Value = "Price";
+                worksheet.Cell(1, 4).Value = "Description";
+
+                // Add rows
+                for (int i = 0; i < products.Count; i++)
+                {
+                    worksheet.Cell(i + 2, 1).Value = products[i].Id;
+                    worksheet.Cell(i + 2, 2).Value = products[i].Name;
+                    worksheet.Cell(i + 2, 3).Value = products[i].Price;
+                    worksheet.Cell(i + 2, 4).Value = products[i].Description;
+                }
+
+                // Define the file path and save the workbook
+                string fileName = $"Products_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folderPath, fileName);
+
+                workbook.SaveAs(filePath);
+
+                return Response<string>.Success(filePath); // Return the full path of the saved file
+            }
+            return Response<string>.Failure("Products not found.");
         }
     }
 }
