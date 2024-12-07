@@ -22,21 +22,15 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass
             _productRepo = productRepo;
         }
 
-        public async Task<Response<List<ProductDTO>>> GetAllSearchedProductsAsync(string searchString)
+        public async Task<Response<List<ProductDTO>>> GetAllSearchedProductsAsync(string category, string searchString)
         {
             try
             {
-                //check input string.
-                if (string.IsNullOrEmpty(searchString))
-                {
-                    return Response<List<ProductDTO>>.Failure("input search field is empty.");
-                }
-
                 //send the string to search in database.
-                Response<List<Product>> searchedProductsByStringResponse = await _productRepo.RSearchProductAsync(searchString);
+                Response<List<Product>> searchedProductsByStringResponse = await _productRepo.RSearchProductAsync(category, searchString);
 
                 //check output response.
-                if (!searchedProductsByStringResponse.IsSuccessfull) 
+                if (!searchedProductsByStringResponse.IsSuccessfull)
                 {
                     return Response<List<ProductDTO>>.Failure(searchedProductsByStringResponse.ErrorMessage);
                 }
@@ -70,7 +64,7 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.ProductRepoServiceClass
                 return Response<List<ProductDTO>>.Success(searchedProductsDTOs);
 
             }
-            catch(Exception ex) 
+            catch(Exception ex)
             {
                 return Response<List<ProductDTO>>.Failure(ex.Message);
             }

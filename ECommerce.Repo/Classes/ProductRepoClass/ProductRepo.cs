@@ -17,25 +17,57 @@ namespace ECommerce.Repo.Classes.ProductRepoClass
             _dbContext = dbContext;
         }
 
-        public async Task<Response<List<Product>>> RSearchProductAsync(string searchString)
+        public async Task<Response<List<Product>>> RSearchProductAsync(string category, string searchString)
         {
             try
             {
+                //check if the category available by name.
+                Category? foundCategory = await _dbContext.Categories.FirstOrDefaultAsync(x => x.Name == category);
+
+                if (foundCategory == null && category != "all") 
+                {
+                    return Response<List<Product>>.Failure("Provided category not available in database.");
+                }
+
                 //check input string.
                 if (string.IsNullOrEmpty(searchString))
                 {
                     return Response<List<Product>>.Failure("input search field is empty.");
                 }
 
-                IEnumerable<Product> searchedProductsBySearchString = _dbSet.Where(x => x.Name.Contains(searchString) || x.Description.Contains(searchString));
+                List<Product> searchedProducts = new List<Product>();
+                List<Product> productsByCategory = new List<Product>();
+
+                if (category == "all")
+                {
+                    searchedProducts.AddRange(_dbSet.Where(x => x.Name.Contains(searchString) || x.Description.Contains(searchString)).ToList());
+                    return Response<List<Product>>.Success(searchedProducts);
+
+                }
+                else
+                {
+                    searchedProducts.AddRange(_dbSet.Where(x => x.Name.Contains(searchString) || x.Description.Contains(searchString)).ToList());
+                    productsByCategory.AddRange(_dbSet.Where(x => x.CategoryId == foundCategory.Id).ToList());
+                }
+
+                List<Product> responseProducts = new List<Product>();
+
+                //extract all active and non deleted products only.
+                foreach(Product product in searchedProducts)
+                {
+                    if(!product.IsDeleted && product.IsActive && productsByCategory.Contains(product))
+                    {
+                        responseProducts.Add(product);
+                    }
+                }
 
                 //check output.
-                if(!searchedProductsBySearchString.Any())
+                if(!responseProducts.Any())
                 {
                     return Response<List<Product>>.Failure("No Product Found.");
                 }
 
-                return Response<List<Product>>.Success(searchedProductsBySearchString.ToList());
+                return Response<List<Product>>.Success(responseProducts);
             }
             catch (Exception ex) 
             {

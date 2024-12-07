@@ -219,83 +219,111 @@ namespace ECommerce.WebAPI.Controllers
             }
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchProductByField([FromQuery]string searchString)
+        //[HttpPost("find")]
+        //public async Task<IActionResult> SearchProductByField([FromForm] string searchString)
+        //{
+        //    try
+        //    {
+        //        //check if the id is null.
+        //        if (string.IsNullOrEmpty(searchString))
+        //        {
+        //            return Ok(Response<string>.Failure("input id can not be null"));
+        //        }
+
+        //        //send the request to service layer.
+        //        Response<List<ProductDTO>> getProductRequestResponse = await _productRepoService.GetAllSearchedProductsAsync(searchString);
+
+        //        //check response
+        //        if (!getProductRequestResponse.IsSuccessfull)
+        //        {
+        //            return Ok(Response<IEnumerable<ProductDTO>>.Failure(getProductRequestResponse.ErrorMessage));
+        //        }
+
+        //        return Ok(getProductRequestResponse);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Ok(Response<string>.Failure(ex.Message));
+        //    }
+        //}
+
+        [HttpGet("search-product")]
+        public async Task<IActionResult> SearchProducts([FromQuery] string category, [FromQuery] string searchField)
         {
             try
             {
-                //check if the id is null.
-                if (string.IsNullOrEmpty(searchString))
+                //check if the category is null.
+                if (string.IsNullOrEmpty(category))
                 {
-                    return Ok(Response<string>.Failure("input id can not be null"));
+                    return Ok(Response<List<ProductDTO>>.Failure("input category can not be null"));
                 }
 
-                //send the request to service layer.
-                Response<List<ProductDTO>> getProductRequestResponse = await _productRepoService.GetAllSearchedProductsAsync(searchString);
-
-                //check response
-                if (!getProductRequestResponse.IsSuccessfull)
-                {
-                    return Ok(Response<IEnumerable<ProductDTO>>.Failure(getProductRequestResponse.ErrorMessage));
-                }
-
-                return Ok(getProductRequestResponse);
-            }
-            catch (Exception ex)
-            {
-                return Ok(Response<string>.Failure(ex.Message));
-            }
-        }
-
-        [HttpGet("search-by-category")]
-        public async Task<IActionResult> SearchProductsByCategory([FromQuery] string categoryName)
-        {
-            try
-            {
-                //check if the id is null.
-                if (string.IsNullOrEmpty(categoryName))
-                {
-                    return Ok(Response<string>.Failure("input id can not be null"));
-                }
-
-                //check category name input.
-                if(categoryName == "all")
+                //Case: 1
+                if (category == "all" && searchField == "null")
                 {
                     Response<List<ProductDTO>> allProductsResponse = await _productRepoService.GetAllAsync();
 
                     //check response.
                     if (!allProductsResponse.IsSuccessfull)
                     {
-                        return Ok(Response<string>.Failure(allProductsResponse.ErrorMessage));
+                        return Ok(Response<List<ProductDTO>>.Failure(allProductsResponse.ErrorMessage));
                     }
 
                     return Ok(allProductsResponse);
                 }
-
-                Response<CategoryDTO> getCategoryByCategoryNameResponse = await _categoryRepoService.GetByCategoryNameAsync(categoryName);
-
-                //check the find category info response
-                if (!getCategoryByCategoryNameResponse.IsSuccessfull || getCategoryByCategoryNameResponse.Value.Id == null)
+                //Case: 2
+                else if (category != "all" && category != "null" && (searchField == " null" || searchField == "null"))
                 {
-                    return Ok(Response<string>.Failure(getCategoryByCategoryNameResponse.ErrorMessage));
+                    Response<CategoryDTO> getCategoryByCategoryNameResponse = await _categoryRepoService.GetByCategoryNameAsync(category);
+
+                    //check the find category info response
+                    if (!getCategoryByCategoryNameResponse.IsSuccessfull || getCategoryByCategoryNameResponse.Value.Id == null)
+                    {
+                        return Ok(Response<List<ProductDTO>>.Failure(getCategoryByCategoryNameResponse.ErrorMessage));
+                    }
+
+                    //send the request to service layer.
+                    Response<List<ProductDTO>> getProductRequestResponse = await _productRepoService.GetProductsByCategoryId(getCategoryByCategoryNameResponse.Value.Id);
+
+                    //check response
+                    if (!getProductRequestResponse.IsSuccessfull)
+                    {
+                        return Ok(Response<IEnumerable<ProductDTO>>.Failure(getProductRequestResponse.ErrorMessage));
+                    }
+
+                    return Ok(getProductRequestResponse);
                 }
-
-                //send the request to service layer.
-                Response<List<ProductDTO>> getProductRequestResponse = await _productRepoService.GetProductsByCategoryId(getCategoryByCategoryNameResponse.Value.Id);
-
-                //check response
-                if (!getProductRequestResponse.IsSuccessfull)
+                //Case: 3
+                else if (category == "all" && searchField != "null")
                 {
-                    return Ok(Response<IEnumerable<ProductDTO>>.Failure(getProductRequestResponse.ErrorMessage));
+                    Response<List<ProductDTO>> productListResponse = await _productRepoService.GetAllSearchedProductsAsync(category, searchField);
+                    if (!productListResponse.IsSuccessfull)
+                    {
+                        return Ok(Response<List<ProductDTO>>.Failure(productListResponse.ErrorMessage));
+                    }
+                    return Ok(productListResponse);
                 }
-
-                return Ok(getProductRequestResponse);
+                //Case: 4
+                else if ((category != "all" || category != "null") && (searchField != " null" || searchField != "null"))
+                {
+                    Response<List<ProductDTO>> productListResponse = await _productRepoService.GetAllSearchedProductsAsync(category, searchField);
+                    if (!productListResponse.IsSuccessfull)
+                    {
+                        return Ok(Response<List<ProductDTO>>.Failure(productListResponse.ErrorMessage));
+                    }
+                    return Ok(productListResponse);
+                }
+                else 
+                {
+                    return Ok(new Response<List<ProductDTO>> { ErrorMessage = "no product found." });
+                }
             }
             catch (Exception ex)
             {
                 return Ok(Response<string>.Failure(ex.Message));
             }
         }
+
 
 
         private async Task<UserClaimModel> GetUserClaims()
