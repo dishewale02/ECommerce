@@ -66,7 +66,7 @@ namespace ECommerce.WebAPI.Controllers
                     }
                     else
                     {
-                        return Ok(createUserServiceResponse.Value);
+                        return Ok(createUserServiceResponse);
                     }
                 }
                 catch (Exception ex)

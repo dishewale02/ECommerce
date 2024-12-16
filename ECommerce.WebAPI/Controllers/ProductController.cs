@@ -325,7 +325,6 @@ namespace ECommerce.WebAPI.Controllers
         }
 
 
-
         private async Task<UserClaimModel> GetUserClaims()
         {
             string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
