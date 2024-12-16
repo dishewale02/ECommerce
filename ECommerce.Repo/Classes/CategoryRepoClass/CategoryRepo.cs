@@ -9,9 +9,28 @@ namespace ECommerce.Repo.Classes.CategoryRepoClass
 {
     public class CategoryRepo : GenericRepo<Category>, ICategoryRepo
     {
+        private readonly ApplicationDbContext _context;
         public CategoryRepo(ApplicationDbContext dbContext) : base(dbContext)
         {
+            _context = dbContext;
+        }
 
+        public async Task<Response<List<Category>>> RGetAllCategoriesAsync()
+        {
+            //get category list from database.
+            List<Category> resultCategories = _context.Categories.ToList();
+
+            List<Category> responseCategories = new List<Category>();
+
+            foreach (Category category in resultCategories)
+            {
+                List<Product> allProductsContainsCategory = _context.Products.Where(x => x.CategoryId == category.Id && !x.IsDeleted && x.IsActive).ToList();
+
+                category.Products = allProductsContainsCategory;
+                responseCategories.Add(category);
+            }
+
+            return Response<List<Category>>.Success(responseCategories);
         }
 
         public async Task<Response<Category>> RGetCategoryByCategoryIdAsync(string categoryName)

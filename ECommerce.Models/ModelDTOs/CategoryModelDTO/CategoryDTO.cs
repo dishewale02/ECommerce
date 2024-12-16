@@ -1,5 +1,6 @@
 ﻿
 using ECommerce.Models.DataModels.InfoModel;
+using ECommerce.Models.DataModels.ProductModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace ECommerce.Models.ModelDTOs.CategoryModelDTO
@@ -11,5 +12,6 @@ namespace ECommerce.Models.ModelDTOs.CategoryModelDTO
         [Required]
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public int ProductCount { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ModelDTOs.CategoryModelDTO;
-using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
 using ECommerce.Models.ResponseModel;
 using ECommerce.Services.Interfaces.RepoServiceInterfaces.CategoryRepoServiceInterface;
 using Microsoft.AspNetCore.Authorization;
@@ -21,12 +20,13 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetCategories()
         {
             try
             {
                 //send the request to service layer.
-                Response<List<CategoryDTO>> getAllCategoryRequestResponse = await _categoryRepoService.GetAllAsync();
+                Response<List<CategoryDTO>> getAllCategoryRequestResponse = await _categoryRepoService.GetAllCategoriesAsync();
 
                 //check response
                 if (!getAllCategoryRequestResponse.IsSuccessfull)
@@ -43,6 +43,7 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetCategoryById(string id)
         {
             try
@@ -71,6 +72,7 @@ namespace ECommerce.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> DeleteCategoryById(string id)
         {
             try

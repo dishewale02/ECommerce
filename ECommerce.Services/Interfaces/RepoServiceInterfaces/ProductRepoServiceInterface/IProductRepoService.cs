@@ -9,7 +9,9 @@ namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoService
 {
     public interface IProductRepoService: IGenericRepoService<ProductDTO, Product>
     {
-        public Task<Response<List<ProductDTO>>> GetAllSearchedProductsAsync(string searchString);
-        public Task<Response<List<ProductDTO>>> GetProductsByCategoryId(string categoryId);
+        Task<Response<List<ProductDTO>>> GetAllSearchedProductsAsync(string category, string searchString);
+        Task<Response<List<ProductDTO>>> GetProductsByCategoryId(string categoryId);
+        Task<Response<List<ProductDTO>>> GetDeletedAndNonActiveProducts();
+        Task<Response<ProductDTO>> ActivateDeletedProduct(string productid);
     }
 }

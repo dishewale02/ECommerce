@@ -7,6 +7,7 @@ namespace ECommerce.Repo.Interfaces.CategoryRepoInterface
 {
     public interface ICategoryRepo: IGenericRepo<Category>
     {
+        Task<Response<List<Category>>> RGetAllCategoriesAsync();
         Task<Response<Category>> RGetCategoryByCategoryIdAsync(string categoryName);
     }
 }

@@ -47,5 +47,37 @@ namespace ECommerce.Services.Classes.RepoServiceClasses.CategoryRepoServiceClass
                 return Response<CategoryDTO>.Failure(ex.Message);
             }
         }
+
+        public async Task<Response<List<CategoryDTO>>> GetAllCategoriesAsync()
+        {
+            try
+            {
+                //send request to data layer.
+                Response<List<Category>> getAllCategoriesResponse = await _categoryRepo.RGetAllCategoriesAsync();
+
+                //check response.
+                if(!getAllCategoriesResponse.IsSuccessfull)
+                {
+                    return Response<List<CategoryDTO>>.Failure(getAllCategoriesResponse?.ErrorMessage);
+                }
+
+                List<CategoryDTO> categoriesResponse = new List<CategoryDTO>();
+                //mapp all the category list to CategorDTOs
+                foreach (Category category in getAllCategoriesResponse.Value)
+                {
+                    //mapp from Category to CategoryDTO.
+                    CategoryDTO mappedCategory = _mapper.Map<CategoryDTO>(category);
+
+                    mappedCategory.ProductCount = category.Products.Count();
+
+                    categoriesResponse.Add(mappedCategory);
+                }
+                return Response<List<CategoryDTO>>.Success(categoriesResponse);
+            }
+            catch (Exception ex)
+            {
+                return Response<List<CategoryDTO>>.Failure(ex.Message);
+            }
+        }
     }
 }
