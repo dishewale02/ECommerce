@@ -1,14 +1,17 @@
 ﻿
+using ECommerce.Models.DataModels.ProductModel;
 using ECommerce.Models.InputModelsDTO.AuthOutputModelDTO;
 using ECommerce.Models.ModelDTOs.ProductInputModelDTO;
-using ECommerce.Models.ModelDTOs.ProductOutputModelDTO;
 using ECommerce.Models.ResponseModel;
+using ECommerce.Services.Interfaces.RepoServiceInterfaces.GenericRepoServiceInterface;
 
 namespace ECommerce.Services.Interfaces.RepoServiceInterfaces.ProductRepoServiceInterface
 {
-    public interface IProductRepoService
+    public interface IProductRepoService: IGenericRepoService<ProductDTO, Product>
     {
-        Task<Response<ProductOutputDTO>> CreateProductAsync(ProductInputDTO productInputDTO, UserClaimModel userClaimModel);
-        Task<Response<UpdateProductOutputDTO>> UpdateProductAsync(UpdateProductInputDTO updateProductInputDTO, UserClaimModel userClaimModel);
+        Task<Response<List<ProductDTO>>> GetAllSearchedProductsAsync(string category, string searchString);
+        Task<Response<List<ProductDTO>>> GetProductsByCategoryId(string categoryId);
+        Task<Response<List<ProductDTO>>> GetDeletedAndNonActiveProducts();
+        Task<Response<ProductDTO>> ActivateDeletedProduct(string productid);
     }
 }

@@ -30,7 +30,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 }
 
                 //find if database is having email id or not.
-                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email && x.IsActive == true && x.IsDeleted == false);
 
                 //check if found user is null.
                 if (foundUserInDatabase is null)
@@ -57,7 +57,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 }
 
                 //find if database is having email id or not.
-                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.UserName == userName && x.IsActive == true && x.IsDeleted == false);
 
                 //check if found user is null.
                 if (foundUserInDatabase is null)
@@ -229,7 +229,7 @@ namespace ECommerce.Repo.Classes.AuthRepoClasses
                 }
 
                 //find if database is having email id or not.
-                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Phone == phoneNumber);
+                User? foundUserInDatabase = await _dbContext.Users.FirstOrDefaultAsync(x => x.Phone == phoneNumber && x.IsActive == true && x.IsDeleted == false);
 
                 //check if found user is null.
                 if (foundUserInDatabase is null)

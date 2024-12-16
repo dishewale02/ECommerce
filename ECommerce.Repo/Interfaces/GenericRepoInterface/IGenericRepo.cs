@@ -12,7 +12,7 @@ namespace ECommerce.Repo.Interfaces.GenericRepoInterface
     {
         Task<Response<T>> RCreateAsync(T entity);
         Task<Response<T>> RUpdateAsync(T entity);
-        Task<Response<T>> RDeleteAsync(string? id);
+        Task<Response<T>> RSoftDeleteAsync(string? id);
         Task<Response<T>> RGetAsync(string? id);
         Task<Response<IEnumerable<T>>> RGetAllAsync();
     }
